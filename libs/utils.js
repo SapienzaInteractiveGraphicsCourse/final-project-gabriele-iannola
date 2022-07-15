@@ -9,4 +9,3 @@ export function dumpObject(obj, lines = [], isLast = true, prefix = '') {
     });
     return lines;
 }
-
