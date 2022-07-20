@@ -192,7 +192,7 @@ gltfLoader.load(url, (gltf) => {
     function computeCameraDirection(e){
 
         cameraDirection = new THREE.Vector2(mainNode.position.x - camera.position.x, mainNode.position.z - camera.position.z).normalize();
-        cameraTangent = new THREE.Vector2(1,-cameraDirection.x/cameraDirection.y).normalize();
+        cameraTangent = new THREE.Vector2(1,-cameraDirection.x/cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
         console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
         
     }
