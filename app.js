@@ -17,10 +17,19 @@ var dogBoxHelper;
 
 var cameraDirection, cameraTangent;
 
-var dogStatus = {
+var group1Props = {
+    scalingValue: 0.05
+}
+
+var dogProps = {
     inMovement : false,
     speed : 0.1,
+    size: new THREE.Vector3(),
     holdingBox: false
+}
+
+var cardboxProps = {
+    size : 0.3
 }
 
 //creating a scene, camera and renderer
@@ -38,14 +47,14 @@ const canvas = renderer.domElement
 document.body.appendChild(canvas);
 
 //Creating a box
-var cardboardBoxSize = 0.3;
-var cardGeometry = new THREE.BoxGeometry(cardboardBoxSize,cardboardBoxSize,cardboardBoxSize);
+
+var cardGeometry = new THREE.BoxGeometry(cardboxProps.size,cardboxProps.size,cardboxProps.size);
 var cardMaterial = new THREE.MeshBasicMaterial({
     color: "#634e15"
 })
 var cardBox = new THREE.Mesh(cardGeometry,cardMaterial);
 cardBox.position.z += 5;
-cardBox.position.y += cardboardBoxSize/2;
+cardBox.position.y += cardboxProps.size/2;
 scene.add(cardBox);
 
 
@@ -102,7 +111,7 @@ scene.add( lightHelper );
 
 const gltfLoader = new GLTFLoader();
 const url = 'models/robotDog/source/robo_dog.gltf';
-var root, mainNode, nodes = [];
+var root, mainNode, dogBoundingBox, nodes = [];
 gltfLoader.load(url, (gltf) => {
 
     root = gltf.scene;
@@ -112,6 +121,9 @@ gltfLoader.load(url, (gltf) => {
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
     //mainNode = root.getObjectByName("RootNode");
     mainNode = root.getObjectByName("blockbench_export");
+    dogBoundingBox = new THREE.Box3().setFromObject(mainNode);
+    dogBoundingBox.getSize(dogProps.size);
+    
     console.log(Utils.dumpObject(root.getObjectByName("leg4")).join('\n'))
     console.log(mainNode.position)
     nodeNames(mainNode);
@@ -142,7 +154,7 @@ gltfLoader.load(url, (gltf) => {
     //group1.add(mainNode);
     dogGroup.add(mainNode);
     group1.add(dogGroup);
-    group1.scale.x = 0.05; group1.scale.y = 0.05; group1.scale.z = 0.05;
+    group1.scale.set(group1Props.scalingValue,group1Props.scalingValue,group1Props.scalingValue)
     scene.add(group1)
 
     dogBoxHelper = new BoxHelper( mainNode, 0xffff00 );
@@ -177,45 +189,45 @@ gltfLoader.load(url, (gltf) => {
             //console.log(e);
             switch(e.key){
                 case "w":{
-                    dogStatus.inMovement = true;
-                    var speed = dogStatus.speed;
+                    dogProps.inMovement = true;
+                    var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraDirection.x
                     group1.position.z += speed * cameraDirection.y
-                    mainNode.rotation.y = Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = Math.atan2(cameraDirection.x,cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("forward");
                     break;
                 } 
                 case "a":{
-                    dogStatus.inMovement = true;
-                    var speed = dogStatus.speed;
+                    dogProps.inMovement = true;
+                    var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraTangent.x
                     group1.position.z += speed * cameraTangent.y
-                    mainNode.rotation.y = Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);     
+                    dogGroup.rotation.y = Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);     
                     controls.target = mainNode.position;
                     console.log("left");
                     break;
                 } 
                 case "s":{
-                    dogStatus.inMovement = true;
-                    var speed = dogStatus.speed;
+                    dogProps.inMovement = true;
+                    var speed = dogProps.speed;
 
                     group1.position.x -= speed * cameraDirection.x
                     group1.position.z -= speed * cameraDirection.y
-                    mainNode.rotation.y = Math.PI + Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = Math.PI + Math.atan2(cameraDirection.x,cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("back");
                     break;
                 } 
                 case "d":{
-                    dogStatus.inMovement = true;
-                    var speed = dogStatus.speed;
+                    dogProps.inMovement = true;
+                    var speed = dogProps.speed;
                     
                     group1.position.x -= speed * cameraTangent.x
                     group1.position.z -= speed * cameraTangent.y
-                    mainNode.rotation.y = 3 * Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = 3 * Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("right"); 
                     break;
@@ -226,17 +238,19 @@ gltfLoader.load(url, (gltf) => {
                 case "f":{
                     if(e.repeat) break;
                     
-                    if(dogStatus.holdingBox){
+                    if(dogProps.holdingBox){
                         scene.add(cardBox);
-                        cardBox.position.z = 5;
-                        console.log(cardBox);
-                        dogStatus.holdingBox = false;
+                        cardBox.position.set(0,cardboxProps.size/2,5); //TO-DO change to a specific position
+                        cardBox.scale.set(1,1,1)
+                        console.log(cardBox.scale)
+                        dogProps.holdingBox = false;
                         console.log("release")
                     }else{
-                        group1.add(cardBox);
-                        cardBox.position.z = 0;
-                        console.log(cardBox);
-                        dogStatus.holdingBox = true;
+                        dogGroup.add(cardBox);
+                        cardBox.position.set(0,dogProps.size.y/2.0 * 1.5,-dogProps.size.z/2.0 * 0.2);
+                        cardBox.scale.set(1/group1Props.scalingValue,1/group1Props.scalingValue,1/group1Props.scalingValue)
+                        console.log(dogProps.size.y/2.0 * group1Props.scalingValue)
+                        dogProps.holdingBox = true;
                         console.log("pick")
                     }
 
@@ -247,7 +261,7 @@ gltfLoader.load(url, (gltf) => {
         document.onkeyup = function(e){
             switch(e.key){
                 case "w":case "a":case "s":case "d":{
-                    dogStatus.inMovement = false;
+                    dogProps.inMovement = false;
                     console.log("stop");
                     break;
                 }
@@ -282,6 +296,7 @@ function animate(){
     controls.update();
     lightHelper.update();
     dogBoxHelper.update();
+    
 
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
     
