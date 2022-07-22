@@ -29,7 +29,8 @@ var dogProps = {
 }
 
 var cardboxProps = {
-    size : 0.3
+    size : 0.3,
+    pickupDistance: 2
 }
 
 //creating a scene, camera and renderer
@@ -240,16 +241,20 @@ gltfLoader.load(url, (gltf) => {
                     
                     if(dogProps.holdingBox){
                         scene.add(cardBox);
-                        cardBox.position.set(0,cardboxProps.size/2,5); //TO-DO change to a specific position
-                        cardBox.scale.set(1,1,1)
+                        console.log(group1.position);
+                        
+                        cardBox.scale.set(1,1,1);
+                        cardBox.position.set(group1.position.x,group1.position.y + cardboxProps.size/2,group1.position.z); //TO-DO change to a specific position
                         console.log(cardBox.scale)
                         dogProps.holdingBox = false;
                         console.log("release")
                     }else{
+
+                        if(group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
+
                         dogGroup.add(cardBox);
                         cardBox.position.set(0,dogProps.size.y/2.0 * 1.5,-dogProps.size.z/2.0 * 0.2);
                         cardBox.scale.set(1/group1Props.scalingValue,1/group1Props.scalingValue,1/group1Props.scalingValue)
-                        console.log(dogProps.size.y/2.0 * group1Props.scalingValue)
                         dogProps.holdingBox = true;
                         console.log("pick")
                     }
