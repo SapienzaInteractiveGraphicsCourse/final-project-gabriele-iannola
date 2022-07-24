@@ -111,7 +111,8 @@ scene.add(light);
 scene.add( lightHelper );
 
 const gltfLoader = new GLTFLoader();
-const url = 'models/robotDog/source/robo_dog.gltf';
+//const url = 'models/robotDog/source/robo_dog.gltf';
+const url = 'models/test/dog2.gltf'
 var root, mainNode, dogBoundingBox, nodes = [];
 gltfLoader.load(url, (gltf) => {
 
@@ -121,7 +122,8 @@ gltfLoader.load(url, (gltf) => {
     console.log(Utils.dumpObject(root).join('\n'));
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
     //mainNode = root.getObjectByName("RootNode");
-    mainNode = root.getObjectByName("blockbench_export");
+    //mainNode = root.getObjectByName("blockbench_export");
+    mainNode = root.getObjectByName("Scene");
     dogBoundingBox = new THREE.Box3().setFromObject(mainNode);
     dogBoundingBox.getSize(dogProps.size);
     
@@ -284,16 +286,19 @@ gltfLoader.load(url, (gltf) => {
         
     }
         
+    const axesHelperPart = new AxesHelper( 5 );
+    mainNode.getObjectByName("leg4").add(axesHelperPart);
+
 
     //tween.start();
         
 });
 
 
-index = Math.floor(Math.random() * nodes.length);
-
 
 animate();
+
+
 
 
 function animate(){
@@ -316,7 +321,11 @@ function animate(){
     
     //console.log(index);
     //mainNode.getObjectByName(nodes[index]).rotation.z += 0.01;
-    //mainNode.getObjectByName("foot4").rotation.x += 0.01;
+    mainNode.getObjectByName("leg1").rotation.x += 0.01;
+    mainNode.getObjectByName("leg2").rotation.x += 0.01;
+    mainNode.getObjectByName("leg3").rotation.x += 0.01;
+    mainNode.getObjectByName("leg4").rotation.x += 0.01;
+    
     //root.position.x += 0.1;
 
     camera.updateProjectionMatrix();
