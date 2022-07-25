@@ -8,14 +8,15 @@ import { BoxHelper } from './libs/three/src/helpers/BoxHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = true;
+const DEBUG = false;
 var alpha = 0, r = 3, index;
 var position = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
     "leg3": 0, "move": 0, "foot3": 0 ,
     "leg2": 0, "move4": 0, "move5":0, "move6": 0,
     "leg1": 0, "move1": 0, "move2":0, "move3": 0,
-    "tail":0
+    "tail":0, "body":0,
+    "head":0, "up":0, "down":0
 };
 
 var runningAnimationProperties = {
@@ -23,30 +24,38 @@ var runningAnimationProperties = {
         frame1: {
             "leg4": 40, "move7": -30, "foot4": 30,
             "leg3": 0, "move": -30, "foot3": 30,
-            "leg2": -30, "move4": -20, "move5":40, "move6": 40,
-            "leg1": -30, "move1": -20, "move2":40, "move3": 40,
-            "tail":-5,
+            "leg2": -30, "move4": -20, "move5":20, "move6": 40,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            
+            "tail":-5, "body":0,
+            "head":10,"up":0, "down":5
         },
         frame2: {
             "leg4": -60, "move7": 0, "foot4": 60,
             "leg3": 40, "move": -30, "foot3": 30,
             "leg2": -10, "move4": -20, "move5":0, "move6": 0,
-            "leg1": 10, "move1": 0, "move2":0, "move3": 0,
-            "tail": 5,
+            "leg1": -30, "move1": -20, "move2":40, "move3": 40,
+            
+            "tail": 5, "body":5,
+            "head":0, "up":0, "down":10
         },
         frame3: {
             "leg4": -80, "move7": 20, "foot4": 90,
             "leg3": -60, "move": 0, "foot3": 60,
             "leg2": 60, "move4": -20, "move5":40, "move6": 70,
-            "leg1": 60, "move1": -20, "move2":40, "move3": 70,
-            "tail":-5,
+            "leg1": 10, "move1": 0, "move2":0, "move3": 0,
+            
+            "tail":-5, "body":0,
+            "head":-10,"up":0, "down":5
         },
         frame4: {
             "leg4": 0, "move7": -30, "foot4": 30,
             "leg3": -80, "move": 20, "foot3": 90,
             "leg2": 20, "move4": -20, "move5":0, "move6": 0,
-            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
-            "tail": 5,
+            "leg1": 60, "move1": -20, "move2":40, "move3": 70,
+            
+            "tail": 5, "body":-5,
+            "head":0,"up":0, "down":10
         }
     },
     axes:{
@@ -54,7 +63,8 @@ var runningAnimationProperties = {
         "leg3": 0, "move": 0, "foot3": 0 ,
         "leg2": 0, "move4": 0, "move5":0, "move6": 0,
         "leg1": 0, "move1": 0, "move2":0, "move3": 0,
-        "tail":2
+        "tail":2,
+        "head":0, "up":0,"down":0
     },
     tweens: []
 }
@@ -214,10 +224,10 @@ gltfLoader.load(url, (gltf) => {
     //light.target = mainNode;
     //scene.add(root);
 
-    var tween1 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame1, 500/3);
-    var tween2 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame2, 500/3);
-    var tween3 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame3, 500/3);
-    var tween4 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame4, 500/3);
+    var tween1 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame1, 500/4);
+    var tween2 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame2, 500/4);
+    var tween3 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame3, 500/4);
+    var tween4 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame4, 500/4);
 
     tween1.onUpdate(moveParts);
     tween2.onUpdate(moveParts);
@@ -321,8 +331,8 @@ gltfLoader.load(url, (gltf) => {
 
                         if (group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
 
-                        dogGroup.add(cardBox);
-                        cardBox.position.set(0, dogProps.size.y / 2.0 * 1.5, -dogProps.size.z / 2.0 * 0.2);
+                        mainNode.getObjectByName("body").add(cardBox);
+                        cardBox.position.set(0, dogProps.size.y / 2.0 * 0.5, -dogProps.size.z / 2.0 * 0.2);
                         cardBox.scale.set(1 / group1Props.scalingValue, 1 / group1Props.scalingValue, 1 / group1Props.scalingValue)
                         dogProps.holdingBox = true;
                         console.log("pick")
@@ -390,17 +400,14 @@ function animate() {
     //mainNode.getObjectByName(nodes[index]).rotation.z += 0.01;
 
     /*
-    mainNode.getObjectByName("leg4").rotation.x = THREE.MathUtils.degToRad(30);
-    mainNode.getObjectByName("move7").rotation.x = THREE.MathUtils.degToRad(0);
-    mainNode.getObjectByName("foot4").rotation.x = THREE.MathUtils.degToRad(80);
-
-    mainNode.getObjectByName("leg2").rotation.x = THREE.MathUtils.degToRad(-30);
-    mainNode.getObjectByName("move4").rotation.x = THREE.MathUtils.degToRad(0);
-    mainNode.getObjectByName("move5").rotation.x = THREE.MathUtils.degToRad(0);
+    
     mainNode.getObjectByName("move6").rotation.x = THREE.MathUtils.degToRad(50);
     */
 
+    
+    //mainNode.getObjectByName("body").rotation.z = THREE.MathUtils.degToRad(5)
     //root.position.x += 0.1;
+
 
     camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
