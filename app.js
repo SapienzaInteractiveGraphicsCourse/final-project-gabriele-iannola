@@ -1,7 +1,7 @@
 import * as THREE from './libs/three/build/three.module.js';
-import {GLTFLoader} from './libs/three/examples/jsm/loaders/GLTFLoader.js';
-import {OrbitControls} from './libs/three/examples/jsm/controls/OrbitControls.js';
-import {DirectionalLightHelper} from './libs/three/src/helpers/DirectionalLightHelper.js';
+import { GLTFLoader } from './libs/three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from './libs/three/examples/jsm/controls/OrbitControls.js';
+import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLightHelper.js';
 import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { GridHelper } from './libs/three/src/helpers/GridHelper.js';
 import { BoxHelper } from './libs/three/src/helpers/BoxHelper.js';
@@ -10,8 +10,55 @@ import * as Utils from './libs/utils.js'
 
 const DEBUG = true;
 var alpha = 0, r = 3, index;
-var position = { x : 0, y: -Math.PI/2, z: 0 };
-var target = { x : 0, y: Math.PI/2, z: 0 };
+var position = {
+    "leg4": 0, "move7": 0, "foot4": 0 ,
+    "leg3": 0, "move": 0, "foot3": 0 ,
+    "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+    "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+    "tail":0
+};
+
+var runningAnimationProperties = {
+    frames: {
+        frame1: {
+            "leg4": 40, "move7": -30, "foot4": 30,
+            "leg3": 0, "move": -30, "foot3": 30,
+            "leg2": -30, "move4": -20, "move5":40, "move6": 40,
+            "leg1": -30, "move1": -20, "move2":40, "move3": 40,
+            "tail":-5,
+        },
+        frame2: {
+            "leg4": -60, "move7": 0, "foot4": 60,
+            "leg3": 40, "move": -30, "foot3": 30,
+            "leg2": -10, "move4": -20, "move5":0, "move6": 0,
+            "leg1": 10, "move1": 0, "move2":0, "move3": 0,
+            "tail": 5,
+        },
+        frame3: {
+            "leg4": -80, "move7": 20, "foot4": 90,
+            "leg3": -60, "move": 0, "foot3": 60,
+            "leg2": 60, "move4": -20, "move5":40, "move6": 70,
+            "leg1": 60, "move1": -20, "move2":40, "move3": 70,
+            "tail":-5,
+        },
+        frame4: {
+            "leg4": 0, "move7": -30, "foot4": 30,
+            "leg3": -80, "move": 20, "foot3": 90,
+            "leg2": 20, "move4": -20, "move5":0, "move6": 0,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            "tail": 5,
+        }
+    },
+    axes:{
+        "leg4": 0, "move7": 0, "foot4": 0 ,
+        "leg3": 0, "move": 0, "foot3": 0 ,
+        "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+        "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+        "tail":2
+    },
+    tweens: []
+}
+
 
 var dogBoxHelper;
 
@@ -22,14 +69,14 @@ var group1Props = {
 }
 
 var dogProps = {
-    inMovement : false,
-    speed : 0.1,
+    inMovement: false,
+    speed: 0.1,
     size: new THREE.Vector3(),
     holdingBox: false
 }
 
 var cardboxProps = {
-    size : 0.3,
+    size: 0.3,
     pickupDistance: 2
 }
 
@@ -41,7 +88,7 @@ scene.background = new THREE.Color(0x666666)
 const aspect = window.innerWidth / window.innerHeight;
 
 const renderer = new THREE.WebGLRenderer({
-    antialias: true 
+    antialias: true
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 const canvas = renderer.domElement
@@ -49,25 +96,25 @@ document.body.appendChild(canvas);
 
 //Creating a box
 
-var cardGeometry = new THREE.BoxGeometry(cardboxProps.size,cardboxProps.size,cardboxProps.size);
+var cardGeometry = new THREE.BoxGeometry(cardboxProps.size, cardboxProps.size, cardboxProps.size);
 var cardMaterial = new THREE.MeshBasicMaterial({
     color: "#634e15"
 })
-var cardBox = new THREE.Mesh(cardGeometry,cardMaterial);
+var cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
 cardBox.position.z += 5;
-cardBox.position.y += cardboxProps.size/2;
+cardBox.position.y += cardboxProps.size / 2;
 scene.add(cardBox);
 
 
 var group1 = new THREE.Group();
 var dogGroup = new THREE.Group();
-const axesHelperScene = new AxesHelper( 5 );
-scene.add( axesHelperScene );
-const axesHelperTest = new AxesHelper( 5 );
-group1.add( axesHelperTest );
+const axesHelperScene = new AxesHelper(5);
+scene.add(axesHelperScene);
+const axesHelperTest = new AxesHelper(5);
+group1.add(axesHelperTest);
 
-const gridHelper = new THREE.GridHelper( 100, 100 );
-scene.add( gridHelper );
+const gridHelper = new THREE.GridHelper(100, 100);
+scene.add(gridHelper);
 
 //scene.add(mesh);
 //console.log(mesh)
@@ -81,12 +128,13 @@ height = 2;
 width = aspect * height;
 camera = new THREE.OrthographicCamera(-width,width,height,-height,0.1,100);*/
 
-camera = new THREE.PerspectiveCamera(60,aspect,0.1,1000);
-camera.position.set(0, 30, -cameraRadius);
+camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+//camera.position.set(0, 30, -cameraRadius);
+camera.position.set(-cameraRadius, 0, 0);
 
-const controls = new OrbitControls( camera, canvas );
-if(!DEBUG){
-    controls.mouseButtons = {LEFT:0}
+const controls = new OrbitControls(camera, canvas);
+if (!DEBUG) {
+    controls.mouseButtons = { LEFT: 0 }
     controls.maxDistance = cameraRadius;
     controls.minDistance = cameraRadius;
     controls.minPolarAngle = THREE.MathUtils.degToRad(20);
@@ -97,18 +145,18 @@ if(!DEBUG){
 
 //create a light
 
-scene.add(new THREE.AmbientLight(0xffffff,0.3))
+scene.add(new THREE.AmbientLight(0xffffff, 0.3))
 
 const lightColor = 0xffffff;
 const intensity = 1;
-const light = new THREE.DirectionalLight(lightColor,intensity);
-light.position.set(3,3,3);
+const light = new THREE.DirectionalLight(lightColor, intensity);
+light.position.set(3, 3, 3);
 
 
-const lightHelper = new DirectionalLightHelper( light);
+const lightHelper = new DirectionalLightHelper(light);
 
 scene.add(light);
-scene.add( lightHelper );
+scene.add(lightHelper);
 
 const gltfLoader = new GLTFLoader();
 //const url = 'models/robotDog/source/robo_dog.gltf';
@@ -117,7 +165,7 @@ var root, mainNode, dogBoundingBox, nodes = [];
 gltfLoader.load(url, (gltf) => {
 
     root = gltf.scene;
-    
+
 
     console.log(Utils.dumpObject(root).join('\n'));
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
@@ -126,18 +174,18 @@ gltfLoader.load(url, (gltf) => {
     mainNode = root.getObjectByName("Scene");
     dogBoundingBox = new THREE.Box3().setFromObject(mainNode);
     dogBoundingBox.getSize(dogProps.size);
-    
+
     console.log(Utils.dumpObject(root.getObjectByName("leg4")).join('\n'))
     console.log(mainNode.position)
-    nodeNames(mainNode);
-    console.log(nodes);
+    nodeNames(root.getObjectByName("leg4"));
+    console.log("NODES", nodes);
 
-    function nodeNames(obj){
-        if(obj.children.lenght == 0) return;
-        obj.children.forEach((child,ndx) => {
-            if(child.type == "Object3D"){
+    function nodeNames(obj) {
+        if (obj.children.lenght == 0) return;
+        obj.children.forEach((child, ndx) => {
+            if (child.type == "Object3D") {
                 nodes.push(child.name);
-            } 
+            }
             nodeNames(child);
         });
     }
@@ -157,141 +205,160 @@ gltfLoader.load(url, (gltf) => {
     //group1.add(mainNode);
     dogGroup.add(mainNode);
     group1.add(dogGroup);
-    group1.scale.set(group1Props.scalingValue,group1Props.scalingValue,group1Props.scalingValue)
+    group1.scale.set(group1Props.scalingValue, group1Props.scalingValue, group1Props.scalingValue)
     scene.add(group1)
 
-    dogBoxHelper = new BoxHelper( mainNode, 0xffff00 );
-    scene.add( dogBoxHelper );
+    dogBoxHelper = new BoxHelper(mainNode, 0xffff00);
+    scene.add(dogBoxHelper);
 
     //light.target = mainNode;
     //scene.add(root);
 
-    var tween = new TWEEN.Tween(position).to(target, 5000);
+    var tween1 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame1, 500/3);
+    var tween2 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame2, 500/3);
+    var tween3 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame3, 500/3);
+    var tween4 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame4, 500/3);
 
-    tween.onUpdate(function(){
-        mainNode.rotation.x = position.x;
-        mainNode.rotation.y = position.y;
-        mainNode.rotation.z = position.z;
-    });
+    tween1.onUpdate(moveParts);
+    tween2.onUpdate(moveParts);
+    tween3.onUpdate(moveParts);
+    tween4.onUpdate(moveParts);
 
-    tween.delay(1000);
-    tween.repeatDelay(0);
-    tween.easing(TWEEN.Easing.Elastic.InOut);
-    tween.repeat(Infinity);
-    tween.yoyo(true);
+    function moveParts() {
+        Object.keys(position).forEach(part => {
+            runningAnimationProperties.axes[part] == 0 ? 
+                mainNode.getObjectByName(part).rotation.x = THREE.MathUtils.degToRad(position[part]):
+                runningAnimationProperties.axes[part] == 1 ? 
+                mainNode.getObjectByName(part).rotation.y = THREE.MathUtils.degToRad(position[part]):
+                mainNode.getObjectByName(part).rotation.z = THREE.MathUtils.degToRad(position[part])
+        });
+    }
+
+    moveParts();
+
+    //tween1.delay(1000);
+    //tween1.repeatDelay(0);
+    //tween.easing(TWEEN.Easing.Linear.None);
+    tween1.chain(tween2);
+    tween2.chain(tween3);
+    tween3.chain(tween4);
+    tween4.chain(tween1);
+    //tween2.easing(TWEEN.Easing.Back.In);
+    //tween.repeat(Infinity);
+    //tween.yoyo(true);
 
     setKeyboardControl();
 
-    controls.addEventListener("change",computeCameraDirection);
+    controls.addEventListener("change", computeCameraDirection);
     //setMouseControl();
 
-    function setKeyboardControl(){
-        document.onkeydown = function(e){
-            
+    function setKeyboardControl() {
+        document.onkeydown = function (e) {
+
             //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
             //console.log(e);
-            switch(e.key){
-                case "w":{
+            switch (e.key) {
+                case "w": {
                     dogProps.inMovement = true;
                     var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraDirection.x
                     group1.position.z += speed * cameraDirection.y
-                    dogGroup.rotation.y = Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = Math.atan2(cameraDirection.x, cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("forward");
                     break;
-                } 
-                case "a":{
+                }
+                case "a": {
                     dogProps.inMovement = true;
                     var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraTangent.x
                     group1.position.z += speed * cameraTangent.y
-                    dogGroup.rotation.y = Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);     
+                    dogGroup.rotation.y = Math.PI / 2 + Math.atan2(cameraDirection.x, cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("left");
                     break;
-                } 
-                case "s":{
+                }
+                case "s": {
                     dogProps.inMovement = true;
                     var speed = dogProps.speed;
 
                     group1.position.x -= speed * cameraDirection.x
                     group1.position.z -= speed * cameraDirection.y
-                    dogGroup.rotation.y = Math.PI + Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = Math.PI + Math.atan2(cameraDirection.x, cameraDirection.y);
                     controls.target = mainNode.position;
                     console.log("back");
                     break;
-                } 
-                case "d":{
+                }
+                case "d": {
                     dogProps.inMovement = true;
                     var speed = dogProps.speed;
-                    
+
                     group1.position.x -= speed * cameraTangent.x
                     group1.position.z -= speed * cameraTangent.y
-                    dogGroup.rotation.y = 3 * Math.PI/2 + Math.atan2(cameraDirection.x,cameraDirection.y);
+                    dogGroup.rotation.y = 3 * Math.PI / 2 + Math.atan2(cameraDirection.x, cameraDirection.y);
                     controls.target = mainNode.position;
-                    console.log("right"); 
+                    console.log("right");
                     break;
                 }
-                
+
                 //box interaction
 
-                case "f":{
-                    if(e.repeat) break;
-                    
-                    if(dogProps.holdingBox){
+                case "f": {
+                    if (e.repeat) break;
+
+                    if (dogProps.holdingBox) {
                         scene.add(cardBox);
                         console.log(group1.position);
-                        
-                        cardBox.scale.set(1,1,1);
-                        cardBox.position.set(group1.position.x,group1.position.y + cardboxProps.size/2,group1.position.z); //TO-DO change to a specific position
+
+                        cardBox.scale.set(1, 1, 1);
+                        cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z); //TO-DO change to a specific position
                         console.log(cardBox.scale)
                         dogProps.holdingBox = false;
                         console.log("release")
-                    }else{
+                    } else {
 
-                        if(group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
+                        if (group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
 
                         dogGroup.add(cardBox);
-                        cardBox.position.set(0,dogProps.size.y/2.0 * 1.5,-dogProps.size.z/2.0 * 0.2);
-                        cardBox.scale.set(1/group1Props.scalingValue,1/group1Props.scalingValue,1/group1Props.scalingValue)
+                        cardBox.position.set(0, dogProps.size.y / 2.0 * 1.5, -dogProps.size.z / 2.0 * 0.2);
+                        cardBox.scale.set(1 / group1Props.scalingValue, 1 / group1Props.scalingValue, 1 / group1Props.scalingValue)
                         dogProps.holdingBox = true;
                         console.log("pick")
                     }
 
                     break;
-                } 
+                }
             }
         }
-        document.onkeyup = function(e){
-            switch(e.key){
-                case "w":case "a":case "s":case "d":{
+        document.onkeyup = function (e) {
+            switch (e.key) {
+                case "w": case "a": case "s": case "d": {
                     dogProps.inMovement = false;
                     console.log("stop");
                     break;
                 }
                 default:
             }
-            
+
         }
     }
 
-    function computeCameraDirection(e){
+    function computeCameraDirection(e) {
 
         cameraDirection = new THREE.Vector2(mainNode.position.x - camera.position.x, mainNode.position.z - camera.position.z).normalize();
-        cameraTangent = new THREE.Vector2(1,-cameraDirection.x/cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
+        cameraTangent = new THREE.Vector2(1, -cameraDirection.x / cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
         //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
-        
+
     }
-        
-    const axesHelperPart = new AxesHelper( 5 );
+
+    const axesHelperPart = new AxesHelper(5);
     mainNode.getObjectByName("leg4").add(axesHelperPart);
 
 
-    //tween.start();
-        
+    tween1.start();
+
 });
 
 
@@ -301,15 +368,15 @@ animate();
 
 
 
-function animate(){
+function animate() {
     requestAnimationFrame(animate);
     controls.update();
     lightHelper.update();
     dogBoxHelper.update();
-    
+
 
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
-    
+
 
     //light rotation around target
     //alpha += 0.05;
@@ -318,22 +385,29 @@ function animate(){
     //light.position.z = (r * Math.cos(alpha));
 
     //part.position.x += 0.01;
-    
+
     //console.log(index);
     //mainNode.getObjectByName(nodes[index]).rotation.z += 0.01;
-    mainNode.getObjectByName("leg1").rotation.x += 0.01;
-    mainNode.getObjectByName("leg2").rotation.x += 0.01;
-    mainNode.getObjectByName("leg3").rotation.x += 0.01;
-    mainNode.getObjectByName("leg4").rotation.x += 0.01;
-    
+
+    /*
+    mainNode.getObjectByName("leg4").rotation.x = THREE.MathUtils.degToRad(30);
+    mainNode.getObjectByName("move7").rotation.x = THREE.MathUtils.degToRad(0);
+    mainNode.getObjectByName("foot4").rotation.x = THREE.MathUtils.degToRad(80);
+
+    mainNode.getObjectByName("leg2").rotation.x = THREE.MathUtils.degToRad(-30);
+    mainNode.getObjectByName("move4").rotation.x = THREE.MathUtils.degToRad(0);
+    mainNode.getObjectByName("move5").rotation.x = THREE.MathUtils.degToRad(0);
+    mainNode.getObjectByName("move6").rotation.x = THREE.MathUtils.degToRad(50);
+    */
+
     //root.position.x += 0.1;
 
     camera.updateProjectionMatrix();
-    camera.lookAt(group1.position.x,group1.position.y,group1.position.z);
+    camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
     TWEEN.update();
 
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
 }
 
 /*
