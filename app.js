@@ -19,6 +19,7 @@ var position = {
     "head":0, "up":0, "down":0
 };
 
+var runTweenGroup;
 var runningAnimationProperties = {
     frames: {
         frame1: {
@@ -66,7 +67,8 @@ var runningAnimationProperties = {
         "tail":2,
         "head":0, "up":0,"down":0
     },
-    tweens: []
+    tweens: [],
+    tweenSpeed: [500/4,500/4,500/4,500/4]
 }
 
 
@@ -224,15 +226,38 @@ gltfLoader.load(url, (gltf) => {
     //light.target = mainNode;
     //scene.add(root);
 
-    var tween1 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame1, 500/4);
-    var tween2 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame2, 500/4);
-    var tween3 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame3, 500/4);
-    var tween4 = new TWEEN.Tween(position).to(runningAnimationProperties.frames.frame4, 500/4);
+    runTweenGroup = new TWEEN.Group();
+
+    createAnimationTweens(runningAnimationProperties);
+
+    function createAnimationTweens(props){
+        var tween;
+        var len = Object.keys(props.frames).length;
+        
+        for(let i=0;i<len;i++){
+            console.log(">",i);
+            tween = new TWEEN.Tween(position,runTweenGroup).to(Object.values(runningAnimationProperties.frames)[i],
+                runningAnimationProperties.tweenSpeed[i]);
+            tween.onUpdate(moveParts);          
+            if(i!=0) runningAnimationProperties.tweens[i-1].chain(tween);   
+            runningAnimationProperties.tweens.push(tween);       
+        }
+        runningAnimationProperties.tweens[len-1].chain(runningAnimationProperties.tweens[0]);
+        console.log(props);
+    }
+
+    /*
+    tween1 = new TWEEN.Tween(position,runTweenGroup).to(runningAnimationProperties.frames.frame1, 500/4);
+    tween2 = new TWEEN.Tween(position,runTweenGroup).to(runningAnimationProperties.frames.frame2, 500/4);
+    tween3 = new TWEEN.Tween(position,runTweenGroup).to(runningAnimationProperties.frames.frame3, 500/4);
+    tween4 = new TWEEN.Tween(position,runTweenGroup).to(runningAnimationProperties.frames.frame4, 500/4);
 
     tween1.onUpdate(moveParts);
+    //runningAnimationProperties.tweens.push(tween1);
     tween2.onUpdate(moveParts);
     tween3.onUpdate(moveParts);
     tween4.onUpdate(moveParts);
+    */
 
     function moveParts() {
         Object.keys(position).forEach(part => {
@@ -244,15 +269,17 @@ gltfLoader.load(url, (gltf) => {
         });
     }
 
-    moveParts();
+    //moveParts();
 
     //tween1.delay(1000);
     //tween1.repeatDelay(0);
     //tween.easing(TWEEN.Easing.Linear.None);
+    /*
     tween1.chain(tween2);
     tween2.chain(tween3);
     tween3.chain(tween4);
     tween4.chain(tween1);
+    */
     //tween2.easing(TWEEN.Easing.Back.In);
     //tween.repeat(Infinity);
     //tween.yoyo(true);
@@ -269,7 +296,9 @@ gltfLoader.load(url, (gltf) => {
             //console.log(e);
             switch (e.key) {
                 case "w": {
-                    dogProps.inMovement = true;
+                    if (!e.repeat){
+                        dogProps.inMovement = true;
+                    } 
                     var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraDirection.x
@@ -280,7 +309,9 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
                 case "a": {
-                    dogProps.inMovement = true;
+                    if (!e.repeat){
+                        dogProps.inMovement = true;
+                    } 
                     var speed = dogProps.speed;
 
                     group1.position.x += speed * cameraTangent.x
@@ -291,7 +322,9 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
                 case "s": {
-                    dogProps.inMovement = true;
+                    if (!e.repeat){
+                        dogProps.inMovement = true;
+                    } 
                     var speed = dogProps.speed;
 
                     group1.position.x -= speed * cameraDirection.x
@@ -302,7 +335,9 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
                 case "d": {
-                    dogProps.inMovement = true;
+                    if (!e.repeat){
+                        dogProps.inMovement = true;
+                    } 
                     var speed = dogProps.speed;
 
                     group1.position.x -= speed * cameraTangent.x
@@ -323,7 +358,7 @@ gltfLoader.load(url, (gltf) => {
                         console.log(group1.position);
 
                         cardBox.scale.set(1, 1, 1);
-                        cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z); //TO-DO change to a specific position
+                        cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z);
                         console.log(cardBox.scale)
                         dogProps.holdingBox = false;
                         console.log("release")
@@ -367,7 +402,8 @@ gltfLoader.load(url, (gltf) => {
     mainNode.getObjectByName("leg4").add(axesHelperPart);
 
 
-    tween1.start();
+    //tween1.start();
+    runningAnimationProperties.tweens[0].start();
 
 });
 
@@ -384,6 +420,7 @@ function animate() {
     lightHelper.update();
     dogBoxHelper.update();
 
+    dogAnimationHandler();
 
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
 
@@ -412,9 +449,13 @@ function animate() {
     camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
-    TWEEN.update();
+    //TWEEN.update();
 
     renderer.render(scene, camera);
+}
+
+function dogAnimationHandler(){
+    if(dogProps.inMovement) runTweenGroup.update();
 }
 
 /*
