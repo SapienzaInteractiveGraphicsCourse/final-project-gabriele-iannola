@@ -19,7 +19,7 @@ var position = {
     "head":0, "up":0, "down":0
 };
 
-var runTweenGroup;
+var runTweenGroup,idleTweenGroup;
 var runningAnimationProperties = {
     frames: {
         frame1: {
@@ -57,6 +57,53 @@ var runningAnimationProperties = {
             
             "tail": 5, "body":-5,
             "head":0,"up":0, "down":10
+        }
+    },
+    axes:{
+        "leg4": 0, "move7": 0, "foot4": 0 ,
+        "leg3": 0, "move": 0, "foot3": 0 ,
+        "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+        "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+        "tail":2,
+        "head":0, "up":0,"down":0
+    },
+    tweens: [],
+    tweenSpeed: [500/4,500/4,500/4,500/4]
+}
+
+var idleAnimationProperties = {
+    frames: {
+        frame1: {
+            "leg4": 0, "move7": 0, "foot4": 0 ,
+            "leg3": 0, "move": 0, "foot3": 0 ,
+            "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            "tail":0, "body":0,
+            "head":0, "up":0, "down":0
+        },
+        frame2: {
+            "leg4": 0, "move7": 0, "foot4": 0 ,
+            "leg3": 0, "move": 0, "foot3": 0 ,
+            "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            "tail":0, "body":0,
+            "head":0, "up":0, "down":0
+        },
+        frame3: {
+            "leg4": 0, "move7": 0, "foot4": 0 ,
+            "leg3": 0, "move": 0, "foot3": 0 ,
+            "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            "tail":0, "body":0,
+            "head":0, "up":0, "down":0
+        },
+        frame4: {
+            "leg4": 0, "move7": 0, "foot4": 0 ,
+            "leg3": 0, "move": 0, "foot3": 0 ,
+            "leg2": 0, "move4": 0, "move5":0, "move6": 0,
+            "leg1": 0, "move1": 0, "move2":0, "move3": 0,
+            "tail":0, "body":0,
+            "head":0, "up":0, "down":0
         }
     },
     axes:{
@@ -227,22 +274,23 @@ gltfLoader.load(url, (gltf) => {
     //scene.add(root);
 
     runTweenGroup = new TWEEN.Group();
+    idleTweenGroup = new TWEEN.Group();
 
-    createAnimationTweens(runningAnimationProperties);
+    createAnimationTweens(runTweenGroup,runningAnimationProperties);
+    createAnimationTweens(idleTweenGroup,idleAnimationProperties);
 
-    function createAnimationTweens(props){
+    function createAnimationTweens(group,props){
         var tween;
         var len = Object.keys(props.frames).length;
         
         for(let i=0;i<len;i++){
-            console.log(">",i);
-            tween = new TWEEN.Tween(position,runTweenGroup).to(Object.values(runningAnimationProperties.frames)[i],
-                runningAnimationProperties.tweenSpeed[i]);
+            tween = new TWEEN.Tween(position,group).to(Object.values(props.frames)[i],
+                props.tweenSpeed[i]);
             tween.onUpdate(moveParts);          
-            if(i!=0) runningAnimationProperties.tweens[i-1].chain(tween);   
-            runningAnimationProperties.tweens.push(tween);       
+            if(i!=0) props.tweens[i-1].chain(tween);   
+            props.tweens.push(tween);       
         }
-        runningAnimationProperties.tweens[len-1].chain(runningAnimationProperties.tweens[0]);
+        props.tweens[len-1].chain(props.tweens[0]);
         console.log(props);
     }
 
@@ -404,7 +452,7 @@ gltfLoader.load(url, (gltf) => {
 
     //tween1.start();
     runningAnimationProperties.tweens[0].start();
-
+    idleAnimationProperties.tweens[0].start();
 });
 
 
@@ -456,6 +504,7 @@ function animate() {
 
 function dogAnimationHandler(){
     if(dogProps.inMovement) runTweenGroup.update();
+    else idleTweenGroup.update();
 }
 
 /*
