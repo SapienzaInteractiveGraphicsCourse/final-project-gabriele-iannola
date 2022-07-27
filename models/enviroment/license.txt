@@ -1,0 +1,11 @@
+Model Information:
+* title:	low poly desert village
+* source:	https://sketchfab.com/3d-models/low-poly-desert-village-2639191809c4426f8cc0a532ccf8506b
+* author:	cubemelongames (https://sketchfab.com/cubemelongames)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "low poly desert village" (https://sketchfab.com/3d-models/low-poly-desert-village-2639191809c4426f8cc0a532ccf8506b) by cubemelongames (https://sketchfab.com/cubemelongames) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
