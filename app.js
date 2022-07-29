@@ -19,7 +19,6 @@ var dogJoints = {
     "head":0, "up":0, "down":0, "tongue":50
 };
 
-
 var runTweenGroup,idleTweenGroup;
 var runningAnimationProperties = {
     frames: {
@@ -122,7 +121,9 @@ var idleAnimationProperties = {
 
 var dogBoxHelper;
 
-var inc = 0, shift = 0, actualDirection = new THREE.Vector2(0,0),cameraDirection, cameraTangent;
+var inc = 0, shift = 0, directionIndex = 0;
+var directionsAxes = [];
+//cameraDirection, cameraTangent;
 
 var group1Props = {
     scalingValue: 0.05
@@ -211,6 +212,7 @@ const lightColor = 0xffffff;
 const intensity = 1;
 const light = new THREE.DirectionalLight(lightColor, intensity);
 light.position.set(3, 3, 3);
+
 
 
 const lightHelper = new DirectionalLightHelper(light);
@@ -307,61 +309,71 @@ gltfLoader.load(url, (gltf) => {
 
             //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
             //console.log(e);
+
+            //computeCameraDirection();
+            
             switch (e.key) {
                 case "w": {
                     
-                    dogProps.inMovement = true;
+                    
+                    directionIndex = 0;
+                    
                     
                     /*
                     group1.position.x += speed * cameraDirection.x
                     group1.position.z += speed * cameraDirection.y*/
-                    actualDirection = cameraDirection;
+                    
                     inc = 1
                     shift = 0
+                    dogProps.inMovement = true;
                     controls.target = mainNode.position;
                     //console.log("forward");
                     break;
                 }
                 case "a": {
+                    directionIndex = 1;
                     
-                    dogProps.inMovement = true;
                   
                     /*
                     group1.position.x += speed * cameraTangent.x
                     group1.position.z += speed * cameraTangent.y*/
-                    actualDirection = cameraTangent;
+                    
                     inc = 1
                     shift = 1/2;
+                    dogProps.inMovement = true;
                     controls.target = mainNode.position;
                     //console.log("left");
                     break;
                 }
                 case "s": {
+                    directionIndex = 0;
                     
-                    dogProps.inMovement = true;
                     
                     
                     /*
                     group1.position.x -= speed * cameraDirection.x
                     group1.position.z -= speed * cameraDirection.y*/
                     //dogGroup.rotation.y = Math.PI + Math.atan2(cameraDirection.x, cameraDirection.y);
-                    actualDirection = cameraDirection;
+                    
                     inc = -1
                     shift = 1
+                    dogProps.inMovement = true;
                     controls.target = mainNode.position;
                     //console.log("back");
                     break;
                 }
                 case "d": {
-                    dogProps.inMovement = true;
+                    directionIndex = 1;
+                    
                     
                     /*
                     group1.position.x -= speed * cameraTangent.x
                     group1.position.z -= speed * cameraTangent.y
                     dogGroup.rotation.y = 3 * Math.PI / 2 + Math.atan2(cameraDirection.x, cameraDirection.y);*/
-                    actualDirection = cameraTangent;
+                    
                     inc = -1
                     shift = 3/2
+                    dogProps.inMovement = true;
                     controls.target = mainNode.position;
                     //console.log("right");
                     break;
@@ -412,19 +424,22 @@ gltfLoader.load(url, (gltf) => {
 
     function computeCameraDirection(e) {
 
-        cameraDirection = new THREE.Vector2(mainNode.position.x - camera.position.x, mainNode.position.z - camera.position.z).normalize();
-        cameraTangent = new THREE.Vector2(1, -cameraDirection.x / cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
+        var cameraDirection = new THREE.Vector2(mainNode.position.x - camera.position.x, mainNode.position.z - camera.position.z).normalize();
+        directionsAxes[0] = cameraDirection;
+        directionsAxes[1]  = new THREE.Vector2(1, -cameraDirection.x / cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
         //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
-
+        console.log("CCD")
     }
 
     const axesHelperPart = new AxesHelper(5);
     mainNode.getObjectByName("leg4").add(axesHelperPart);
 
-
     //tween1.start();
     runningAnimationProperties.tweens[0].start();
     idleAnimationProperties.tweens[0].start();
+
+    
+
 });
 
 const url2 = './models/enviroment/scene.gltf'
@@ -438,11 +453,9 @@ gltfLoader.load(url2, (gltf2) => {
     scene.add(mainNode2);
 })
 
-
+var arrowHelper;
 
 animate();
-
-
 
 
 function animate() {
@@ -451,10 +464,17 @@ function animate() {
     lightHelper.update();
     dogBoxHelper.update();
 
+    console.log(directionsAxes);
+
+    scene.remove(arrowHelper);
+    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[directionIndex].x,0,directionsAxes[directionIndex].y), 
+        group1.position, 2, 0xffff00 );
+    scene.add( arrowHelper );
+
     if(dogProps.inMovement){
-        group1.position.x +=  inc *dogProps.speed * actualDirection.x
-        group1.position.z +=  inc * dogProps.speed * actualDirection.y
-        dogGroup.rotation.y = shift * Math.PI + Math.atan2(cameraDirection.x, cameraDirection.y);
+        group1.position.x +=  inc *dogProps.speed * directionsAxes[directionIndex].x
+        group1.position.z +=  inc * dogProps.speed * directionsAxes[directionIndex].y
+        dogGroup.rotation.y = shift * Math.PI + Math.atan2(directionsAxes[0].x, directionsAxes[0].y);
     }
     
 
