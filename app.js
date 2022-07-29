@@ -4,7 +4,6 @@ import { OrbitControls } from './libs/three/examples/jsm/controls/OrbitControls.
 import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLightHelper.js';
 import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { GridHelper } from './libs/three/src/helpers/GridHelper.js';
-import { BoxHelper } from './libs/three/src/helpers/BoxHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
@@ -119,7 +118,9 @@ var idleAnimationProperties = {
 }
 
 
-var dogBoxHelper;
+var dogBoxHelper, dogBox3;
+var houseBoxHelpers = [];
+var houseBox3 = [];
 
 var inc = 0, shift = 0, directionIndex = 0;
 var directionsAxes = [];
@@ -223,7 +224,7 @@ scene.add(lightHelper);
 const gltfLoader = new GLTFLoader();
 //const url = 'models/robotDog/source/robo_dog.gltf';
 const url = 'models/test/dog2.gltf'
-var root, mainNode, dogBoundingBox;
+var root, mainNode;
 gltfLoader.load(url, (gltf) => {
 
     root = gltf.scene;
@@ -234,8 +235,7 @@ gltfLoader.load(url, (gltf) => {
     //mainNode = root.getObjectByName("RootNode");
     //mainNode = root.getObjectByName("blockbench_export");
     mainNode = root.getObjectByName("Scene");
-    dogBoundingBox = new THREE.Box3().setFromObject(mainNode);
-    dogBoundingBox.getSize(dogProps.size);
+    
 
     console.log(Utils.dumpObject(mainNode.getObjectByName("Scene")).join('\n'))
 
@@ -247,7 +247,10 @@ gltfLoader.load(url, (gltf) => {
     group1.scale.set(group1Props.scalingValue, group1Props.scalingValue, group1Props.scalingValue)
     scene.add(group1)
 
-    dogBoxHelper = new BoxHelper(mainNode, 0xffff00);
+    dogBox3 = new THREE.Box3().setFromObject(dogGroup);
+    dogBox3.getSize(dogProps.size);
+    //group1.add(dogBox3)
+    dogBoxHelper = new THREE.BoxHelper(dogGroup);
     scene.add(dogBoxHelper);
 
     //light.target = mainNode;
@@ -273,7 +276,6 @@ gltfLoader.load(url, (gltf) => {
             props.tweens.push(tween);       
         }
         props.tweens[len-1].chain(props.tweens[0]);
-        console.log(props);
 
         function moveParts() {
             Object.keys(dogJoints).forEach(part => {
@@ -413,7 +415,6 @@ gltfLoader.load(url, (gltf) => {
                 case "w": case "a": case "s": case "d": {
                     dogProps.inMovement = false;
                     inc = 0;
-                    console.log("stop");
                     break;
                 }
                 default:
@@ -427,8 +428,7 @@ gltfLoader.load(url, (gltf) => {
         var cameraDirection = new THREE.Vector2(mainNode.position.x - camera.position.x, mainNode.position.z - camera.position.z).normalize();
         directionsAxes[0] = cameraDirection;
         directionsAxes[1]  = new THREE.Vector2(1, -cameraDirection.x / cameraDirection.y).normalize().multiplyScalar(cameraDirection.y >= 0 ? 1 : -1);
-        //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
-        console.log("CCD")
+        
     }
 
     const axesHelperPart = new AxesHelper(5);
@@ -447,10 +447,23 @@ gltfLoader.load(url2, (gltf2) => {
     var root2 = gltf2.scene;
 
     console.log(Utils.dumpObject(root2).join('\n'));
-    var mainNode2 = root2.getObjectByName("Sketchfab_Scene");
+    var mainNode2 = root2.getObjectByName("RootNode");
 
-    root2.scale.set(0.008,0.008,0.008);
+    mainNode2.scale.set(0.008,0.008,0.008);
+    gltf2.scene.updateMatrixWorld( true )
+    mainNode2.children.slice(1).forEach((obj,ndx) => {
+        //obj.scale.set(0.008,0.008,0.008)
+        houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
+        //obj.scale.set(1,1,1)
+        //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
+        houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+        scene.add(houseBoxHelpers[ndx]);
+    });
     scene.add(mainNode2);
+    /*
+    houseBox3.shift();
+    houseBoxHelpers.shift();*/
+
 })
 
 var arrowHelper;
@@ -462,13 +475,16 @@ function animate() {
     requestAnimationFrame(animate);
     controls.update();
     lightHelper.update();
-    dogBoxHelper.update();
 
-    console.log(directionsAxes);
+    dogBoxHelper.update();
+    houseBoxHelpers.forEach(helper => {
+        helper.update();
+    });  
+
+    
 
     scene.remove(arrowHelper);
-    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[directionIndex].x,0,directionsAxes[directionIndex].y), 
-        group1.position, 2, 0xffff00 );
+    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y), group1.position, 2, 0xffff00 );
     scene.add( arrowHelper );
 
     if(dogProps.inMovement){
@@ -476,8 +492,26 @@ function animate() {
         group1.position.z +=  inc * dogProps.speed * directionsAxes[directionIndex].y
         dogGroup.rotation.y = shift * Math.PI + Math.atan2(directionsAxes[0].x, directionsAxes[0].y);
     }
+
     
 
+    dogBox3 = new THREE.Box3().setFromObject(dogGroup);
+    
+    //console.log(houseBox3);
+    houseBox3.forEach((obj,ndx) => {
+        if(dogBox3.intersectsBox(obj)) console.log("Intersect",ndx)
+    });
+    
+
+    var test = new THREE.Vector3();
+
+    //console.log(houseBox3[0])
+    /*
+    houseBox3[0].getCenter(test)
+    console.log("C",test)
+    houseBox3[0].getSize(test)
+    console.log("S",test)
+*/
     dogAnimationHandler();
 
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
