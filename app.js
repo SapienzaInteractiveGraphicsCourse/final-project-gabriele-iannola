@@ -7,7 +7,7 @@ import { GridHelper } from './libs/three/src/helpers/GridHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = true;
+const DEBUG = false;
 var alpha = 0, r = 3, index;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -123,7 +123,7 @@ var houseBoxHelpers = [];
 var houseBox3 = [];
 
 var inc = 0, shift = 0, directionIndex = 0;
-var directionsAxes = [];
+var directionsAxes = [new THREE.Vector2(0,0),new THREE.Vector2(0,0)];
 //cameraDirection, cameraTangent;
 
 var group1Props = {
@@ -145,16 +145,18 @@ var cardboxProps = {
 //creating a scene, camera and renderer
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x666666)
+//scene.background = new THREE.Color(0x87ceeb)
 
 const aspect = window.innerWidth / window.innerHeight;
 
+const canvas = document.querySelector('#c');
+
 const renderer = new THREE.WebGLRenderer({
-    antialias: true
+    canvas,
+    antialias: true,
+    //alpha:true
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-const canvas = renderer.domElement
-document.body.appendChild(canvas);
 
 //Creating a box
 
@@ -167,16 +169,28 @@ cardBox.position.z += 5;
 cardBox.position.y += cardboxProps.size / 2;
 scene.add(cardBox);
 
+const loader = new THREE.TextureLoader();
+const texture = loader.load(
+  'models/skybox/goegap_4k.jpg',
+  () => {
+    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+    rt.fromEquirectangularTexture(renderer, texture);
+    scene.background = rt.texture;
+  });
+
 
 var group1 = new THREE.Group();
 var dogGroup = new THREE.Group();
-const axesHelperScene = new AxesHelper(5);
-scene.add(axesHelperScene);
-const axesHelperTest = new AxesHelper(5);
-group1.add(axesHelperTest);
 
-const gridHelper = new THREE.GridHelper(100, 100);
-scene.add(gridHelper);
+if(DEBUG){
+    const axesHelperScene = new AxesHelper(5);
+    scene.add(axesHelperScene);
+    const axesHelperTest = new AxesHelper(5);
+    group1.add(axesHelperTest);
+    const gridHelper = new THREE.GridHelper(100, 100);
+    scene.add(gridHelper);
+}
+
 
 //scene.add(mesh);
 //console.log(mesh)
@@ -194,6 +208,16 @@ camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 //camera.position.set(0, 30, -cameraRadius);
 camera.position.set(-cameraRadius, 0, 0);
 
+window.addEventListener( 'resize', resizeCanvas);
+
+function resizeCanvas(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+}
+
+
 const controls = new OrbitControls(camera, canvas);
 if (!DEBUG) {
     controls.mouseButtons = { LEFT: 0 }
@@ -209,17 +233,20 @@ if (!DEBUG) {
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.3))
 
-const lightColor = 0xffffff;
-const intensity = 1;
+const lightColor = 0xffeeee;
+const intensity = 2;
 const light = new THREE.DirectionalLight(lightColor, intensity);
-light.position.set(3, 3, 3);
-
-
-
-const lightHelper = new DirectionalLightHelper(light);
+light.position.set(20, 20, 20);
 
 scene.add(light);
-scene.add(lightHelper);
+
+var lightHelper = null;
+
+if(DEBUG){
+    lightHelper = new DirectionalLightHelper(light);
+    scene.add(lightHelper);
+}
+
 
 const gltfLoader = new GLTFLoader();
 //const url = 'models/robotDog/source/robo_dog.gltf';
@@ -251,7 +278,7 @@ gltfLoader.load(url, (gltf) => {
     dogBox3.getSize(dogProps.size);
     //group1.add(dogBox3)
     dogBoxHelper = new THREE.BoxHelper(dogGroup);
-    scene.add(dogBoxHelper);
+    if(DEBUG)scene.add(dogBoxHelper);
 
     //light.target = mainNode;
     //scene.add(root);
@@ -431,9 +458,6 @@ gltfLoader.load(url, (gltf) => {
         
     }
 
-    const axesHelperPart = new AxesHelper(5);
-    mainNode.getObjectByName("leg4").add(axesHelperPart);
-
     //tween1.start();
     runningAnimationProperties.tweens[0].start();
     idleAnimationProperties.tweens[0].start();
@@ -451,13 +475,16 @@ gltfLoader.load(url2, (gltf2) => {
 
     mainNode2.scale.set(0.008,0.008,0.008);
     gltf2.scene.updateMatrixWorld( true )
+    mainNode2.children[0].scale.set(3,3,3);
     mainNode2.children.slice(1).forEach((obj,ndx) => {
         //obj.scale.set(0.008,0.008,0.008)
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
         //obj.scale.set(1,1,1)
         //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
-        houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
-        scene.add(houseBoxHelpers[ndx]);
+        if(DEBUG){
+            houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            scene.add(houseBoxHelpers[ndx]);
+        }
     });
     scene.add(mainNode2);
     /*
@@ -474,19 +501,27 @@ animate();
 
 function animate() {
     requestAnimationFrame(animate);
+
+    
+
     controls.update();
-    lightHelper.update();
+
+    if(DEBUG){
+        lightHelper.update();
+        houseBoxHelpers.forEach(helper => {
+            helper.update();
+        });  
+    }
+    
 
     
-    houseBoxHelpers.forEach(helper => {
-        helper.update();
-    });  
 
-    
+    if(DEBUG){
+        scene.remove(arrowHelper);
+        arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y), group1.position, 2, 0xffff00 );
+        scene.add( arrowHelper );
+    }
 
-    scene.remove(arrowHelper);
-    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y), group1.position, 2, 0xffff00 );
-    scene.add( arrowHelper );
 
     if(dogProps.inMovement){
 
@@ -508,7 +543,7 @@ function animate() {
             }
         }
 
-        dogBoxHelper.update();
+        if(DEBUG) dogBoxHelper.update();
     }
 
     
@@ -532,7 +567,7 @@ function animate() {
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
 
 
-    camera.updateProjectionMatrix();
+    //camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
     //TWEEN.update();
