@@ -467,6 +467,7 @@ gltfLoader.load(url2, (gltf2) => {
 })
 
 var arrowHelper;
+var previousDogPosition = [];
 
 animate();
 
@@ -476,7 +477,7 @@ function animate() {
     controls.update();
     lightHelper.update();
 
-    dogBoxHelper.update();
+    
     houseBoxHelpers.forEach(helper => {
         helper.update();
     });  
@@ -488,22 +489,36 @@ function animate() {
     scene.add( arrowHelper );
 
     if(dogProps.inMovement){
+
+        previousDogPosition = [group1.position.x,group1.position.z,dogGroup.rotation.y];
         group1.position.x +=  inc *dogProps.speed * directionsAxes[directionIndex].x
         group1.position.z +=  inc * dogProps.speed * directionsAxes[directionIndex].y
         dogGroup.rotation.y = shift * Math.PI + Math.atan2(directionsAxes[0].x, directionsAxes[0].y);
+        dogBox3 = new THREE.Box3().setFromObject(group1);
+        //console.log(houseBox3);
+
+        for(var i = 0;i < houseBox3.length;i++){
+            if(dogBox3.intersectsBox(houseBox3[i])) {
+                console.log("c");
+                console.log(previousDogPosition)
+                group1.position.x =  previousDogPosition[0];
+                group1.position.z =  previousDogPosition[1];
+                dogGroup.rotation.y = previousDogPosition[2];
+                break;
+            }
+        }
+
+        dogBoxHelper.update();
     }
 
     
 
-    dogBox3 = new THREE.Box3().setFromObject(dogGroup);
     
-    //console.log(houseBox3);
-    houseBox3.forEach((obj,ndx) => {
-        if(dogBox3.intersectsBox(obj)) console.log("Intersect",ndx)
-    });
+    
+    
     
 
-    var test = new THREE.Vector3();
+    //var test = new THREE.Vector3();
 
     //console.log(houseBox3[0])
     /*
