@@ -660,8 +660,29 @@ function spawnBoxRandom(){
         }
     }
     
-    console.log("positioned at",rx,rz)
-}
+    console.log("box positioned at",rx,rz)
 
+    var distance = anchorProps.points.map((point)=>cardBox.position.distanceTo(point));
+    //var distanceSum = 
+    var probDistribution = distance.map((x => x / (distance.reduce(((total,curr) => total + curr),0))))
+
+    var sortedProb = probDistribution.map((x) => [probDistribution.indexOf(x),x]).sort((a,b)=>a[1] - b[1]);
+    var r = Math.random();
+    console.log("Probs",sortedProb);
+    console.log("R",r);
+    for(let i = 0; i < sortedProb.length; i++){
+        if(r <= sortedProb[i][1]){
+            console.log(sortedProb[i])
+            var choice = anchorProps.points[sortedProb[i][0]];
+            anchorSolid.position.set(choice.x,choice.y,choice.z);
+            break;
+        }
+        r -= sortedProb[i][1];
+    }
+    //console.log("prob",probDistribution)
+
+    
+
+}
 
 
