@@ -3,12 +3,11 @@ import { GLTFLoader } from './libs/three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from './libs/three/examples/jsm/controls/OrbitControls.js';
 import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLightHelper.js';
 import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
-import { GridHelper } from './libs/three/src/helpers/GridHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = true;
-var alpha = 0, r = 3, index;
+var selPoint = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
     "leg3": 0, "move": 0, "foot3": 0 ,
@@ -120,6 +119,7 @@ var idleAnimationProperties = {
 
 var dogBoxHelper, dogBox3;
 var cardBox3,cardBoxHelper;
+var anchorBox3,anchorBoxHelper;
 var houseBoxHelpers = [];
 var houseBox3 = [];
 
@@ -143,10 +143,36 @@ var cardboxProps = {
     pickupDistance: 2
 }
 
+var anchorProps = {
+    size: 1,
+    height: 0.05,
+    points: [
+        new THREE.Vector3(9.5,0,10.7),
+        new THREE.Vector3(2.1,0,14.4),
+        new THREE.Vector3(-2.3,0,9.5),
+        new THREE.Vector3(-13.5,0,9.9),
+        new THREE.Vector3(13.8,0,-0.9),
+        new THREE.Vector3(-14.7,0,-1.1),
+        new THREE.Vector3(9.4,0,-13.8),
+        new THREE.Vector3(-0.9,0,-15.8),
+        new THREE.Vector3(-9.2,0,-10.5),
+    ]
+}
+
 //creating a scene, camera and renderer
 
 const scene = new THREE.Scene();
 //scene.background = new THREE.Color(0x87ceeb)
+
+const loader = new THREE.TextureLoader();
+const texture = loader.load(
+  'models/skybox/goegap_4k.jpg',
+  () => {
+    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
+    rt.fromEquirectangularTexture(renderer, texture);
+    scene.background = rt.texture;
+  });
+
 
 const aspect = window.innerWidth / window.innerHeight;
 
@@ -159,32 +185,10 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-//Creating a box
-
-var cardGeometry = new THREE.BoxGeometry(cardboxProps.size, cardboxProps.size, cardboxProps.size);
-var cardMaterial = new THREE.MeshBasicMaterial({
-    color: "#634e15"
-})
-var cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
-cardBox.position.z += 5;
-cardBox.position.y += cardboxProps.size / 2;
-scene.add(cardBox);
-
-var cardBox3 = new THREE.Box3().setFromObject(cardBox);
-if(DEBUG){
-    cardBoxHelper = new THREE.BoxHelper(cardBox);
-    scene.add(cardBoxHelper);
-}
 
 
-const loader = new THREE.TextureLoader();
-const texture = loader.load(
-  'models/skybox/goegap_4k.jpg',
-  () => {
-    const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
-    rt.fromEquirectangularTexture(renderer, texture);
-    scene.background = rt.texture;
-  });
+
+
 
 
 var group1 = new THREE.Group();
@@ -213,8 +217,8 @@ width = aspect * height;
 camera = new THREE.OrthographicCamera(-width,width,height,-height,0.1,100);*/
 
 camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
-//camera.position.set(0, 30, -cameraRadius);
-camera.position.set(-cameraRadius, 0, 0);
+camera.position.set(0, 30, -cameraRadius);
+//camera.position.set(-cameraRadius, 0, 0);
 
 window.addEventListener( 'resize', resizeCanvas);
 
@@ -255,6 +259,43 @@ if(DEBUG){
     scene.add(lightHelper);
 }
 
+//Creating an anchor point
+var anchorSolid;
+{
+    var anchorGeometry = new THREE.BoxGeometry(anchorProps.size, anchorProps.height, anchorProps.size);
+    var anchorMaterial = new THREE.MeshBasicMaterial({
+        color: "#ffffff"
+    })
+    anchorSolid = new THREE.Mesh(anchorGeometry, anchorMaterial);
+    anchorSolid.position.y = anchorProps.height/2;    
+    scene.add(anchorSolid);
+
+    anchorBox3 = new THREE.Box3().setFromObject(anchorSolid);
+    if(DEBUG){
+        anchorBoxHelper = new THREE.BoxHelper(anchorSolid);
+        scene.add(anchorBoxHelper);
+    }
+}
+
+//Creating a box
+var cardBox;
+{
+    var cardGeometry = new THREE.BoxGeometry(cardboxProps.size, cardboxProps.size, cardboxProps.size);
+    var cardMaterial = new THREE.MeshBasicMaterial({
+        color: "#634e15"
+    })
+    cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
+    cardBox.position.z += 5;
+    cardBox.position.y += cardboxProps.size / 2;
+    scene.add(cardBox);
+
+    cardBox3 = new THREE.Box3().setFromObject(cardBox);
+
+    if(DEBUG){
+        cardBoxHelper = new THREE.BoxHelper(cardBox);
+        scene.add(cardBoxHelper);
+    }
+}
 
 const gltfLoader = new GLTFLoader();
 //const url = 'models/robotDog/source/robo_dog.gltf';
@@ -449,6 +490,13 @@ gltfLoader.load(url, (gltf) => {
                     spawnBoxRandom();
                     break;
                 }
+
+                case "h":{
+                    anchorSolid.position.set(anchorProps.points[selPoint].x,anchorProps.points[selPoint].y,anchorProps.points[selPoint].z);
+                    console.log(anchorSolid.position);
+                    selPoint = (selPoint +1) % anchorProps.points.length;
+                    break;
+                }
             }
         }
         document.onkeyup = function (e) {
@@ -525,6 +573,7 @@ function animate() {
     if(DEBUG){
         lightHelper.update();
         cardBoxHelper.update();
+        anchorBoxHelper.update();
         houseBoxHelpers.forEach(helper => {
             helper.update();
         });  
