@@ -7,7 +7,7 @@ import { GridHelper } from './libs/three/src/helpers/GridHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = false;
+const DEBUG = true;
 var alpha = 0, r = 3, index;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -119,6 +119,7 @@ var idleAnimationProperties = {
 
 
 var dogBoxHelper, dogBox3;
+var cardBox3,cardBoxHelper;
 var houseBoxHelpers = [];
 var houseBox3 = [];
 
@@ -168,6 +169,13 @@ var cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
 cardBox.position.z += 5;
 cardBox.position.y += cardboxProps.size / 2;
 scene.add(cardBox);
+
+var cardBox3 = new THREE.Box3().setFromObject(cardBox);
+if(DEBUG){
+    cardBoxHelper = new THREE.BoxHelper(cardBox);
+    scene.add(cardBoxHelper);
+}
+
 
 const loader = new THREE.TextureLoader();
 const texture = loader.load(
@@ -279,6 +287,7 @@ gltfLoader.load(url, (gltf) => {
     //group1.add(dogBox3)
     dogBoxHelper = new THREE.BoxHelper(dogGroup);
     if(DEBUG)scene.add(dogBoxHelper);
+    
 
     //light.target = mainNode;
     //scene.add(root);
@@ -435,6 +444,11 @@ gltfLoader.load(url, (gltf) => {
 
                     break;
                 }
+
+                case "g":{
+                    spawnBoxRandom();
+                    break;
+                }
             }
         }
         document.onkeyup = function (e) {
@@ -467,11 +481,12 @@ gltfLoader.load(url, (gltf) => {
 });
 
 const url2 = './models/enviroment/scene.gltf'
+var root2,mainNode2
 gltfLoader.load(url2, (gltf2) => {
-    var root2 = gltf2.scene;
+    root2 = gltf2.scene;
 
     console.log(Utils.dumpObject(root2).join('\n'));
-    var mainNode2 = root2.getObjectByName("RootNode");
+    mainNode2 = root2.getObjectByName("RootNode");
 
     mainNode2.scale.set(0.008,0.008,0.008);
     gltf2.scene.updateMatrixWorld( true )
@@ -486,6 +501,7 @@ gltfLoader.load(url2, (gltf2) => {
             scene.add(houseBoxHelpers[ndx]);
         }
     });
+    mainNode2.position.y -= 0.05;
     scene.add(mainNode2);
     /*
     houseBox3.shift();
@@ -502,21 +518,17 @@ animate();
 function animate() {
     requestAnimationFrame(animate);
 
-    
-
     controls.update();
+
+    //console.log(group1.position);
 
     if(DEBUG){
         lightHelper.update();
+        cardBoxHelper.update();
         houseBoxHelpers.forEach(helper => {
             helper.update();
         });  
-    }
     
-
-    
-
-    if(DEBUG){
         scene.remove(arrowHelper);
         arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y), group1.position, 2, 0xffff00 );
         scene.add( arrowHelper );
@@ -534,8 +546,6 @@ function animate() {
 
         for(var i = 0;i < houseBox3.length;i++){
             if(dogBox3.intersectsBox(houseBox3[i])) {
-                console.log("c");
-                console.log(previousDogPosition)
                 group1.position.x =  previousDogPosition[0];
                 group1.position.z =  previousDogPosition[1];
                 dogGroup.rotation.y = previousDogPosition[2];
@@ -578,6 +588,30 @@ function animate() {
 function dogAnimationHandler(){
     if(dogProps.inMovement) runTweenGroup.update();
     else idleTweenGroup.update();
+}
+
+function spawnBoxRandom(){
+    var rx,rz;
+    do{
+        console.log("try");
+        rx = THREE.MathUtils.randFloat(-30,30);
+        rz = THREE.MathUtils.randFloat(-30,30);
+        cardBox.position.set(rx,0,rz);
+        cardBox3 = new THREE.Box3().setFromObject(cardBox);
+    }while(checkIntersect())
+
+    cardBox.position.y = cardboxProps.size / 2;
+
+    function checkIntersect(){
+        for(var i = 0;i < houseBox3.length;i++){
+            if(cardBox3.intersectsBox(houseBox3[i])) {
+                console.log("fail");
+                return true;
+            }
+        }
+    }
+    
+    console.log("positioned at",rx,rz)
 }
 
 
