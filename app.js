@@ -135,7 +135,8 @@ var dogProps = {
     inMovement: false,
     speed: 0.15,
     size: new THREE.Vector3(),
-    holdingBox: false
+    holdingBox: false,
+    rendered: false
 }
 
 var cardboxProps = {
@@ -156,7 +157,8 @@ var anchorProps = {
         new THREE.Vector3(9.4,0,-13.8),
         new THREE.Vector3(-0.9,0,-15.8),
         new THREE.Vector3(-9.2,0,-10.5),
-    ]
+    ],
+    lastAnchorChoice:-1,
 }
 
 //creating a scene, camera and renderer
@@ -267,7 +269,7 @@ var anchorSolid;
         color: "#ffffff"
     })
     anchorSolid = new THREE.Mesh(anchorGeometry, anchorMaterial);
-    anchorSolid.position.y = anchorProps.height/2;    
+    anchorSolid.position.y = -10;    
     scene.add(anchorSolid);
 
     anchorBox3 = new THREE.Box3().setFromObject(anchorSolid);
@@ -285,8 +287,7 @@ var cardBox;
         color: "#634e15"
     })
     cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
-    cardBox.position.z += 5;
-    cardBox.position.y += cardboxProps.size / 2;
+    cardBox.position.y = -10;
     scene.add(cardBox);
 
     cardBox3 = new THREE.Box3().setFromObject(cardBox);
@@ -406,7 +407,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 0
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    //console.log("forward");
+                    console.log("forward");
                     break;
                 }
                 case "a": {
@@ -469,9 +470,15 @@ gltfLoader.load(url, (gltf) => {
 
                         cardBox.scale.set(1, 1, 1);
                         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z);
-                        console.log(cardBox.scale)
+                        cardBox3 = new THREE.Box3().setFromObject(cardBox);
                         dogProps.holdingBox = false;
                         console.log("release")
+
+                        if(cardBox3.intersectsBox(anchorBox3)){
+                            console.log("POINT")
+                            spawnBoxRandom();
+                        } 
+
                     } else {
 
                         if (group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
@@ -491,12 +498,6 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
 
-                case "h":{
-                    anchorSolid.position.set(anchorProps.points[selPoint].x,anchorProps.points[selPoint].y,anchorProps.points[selPoint].z);
-                    console.log(anchorSolid.position);
-                    selPoint = (selPoint +1) % anchorProps.points.length;
-                    break;
-                }
             }
         }
         document.onkeyup = function (e) {
@@ -524,7 +525,7 @@ gltfLoader.load(url, (gltf) => {
     runningAnimationProperties.tweens[0].start();
     idleAnimationProperties.tweens[0].start();
 
-    
+    dogProps.rendered = true;
 
 });
 
@@ -569,6 +570,7 @@ function animate() {
     controls.update();
 
     //console.log(group1.position);
+    //console.log(cardBox3)
 
     if(DEBUG){
         lightHelper.update();
@@ -578,12 +580,15 @@ function animate() {
             helper.update();
         });  
     
-        scene.remove(arrowHelper);
-        arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y), group1.position, 2, 0xffff00 );
-        scene.add( arrowHelper );
+        
     }
 
-
+    
+    scene.remove(arrowHelper);
+    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y).normalize(), 
+        new THREE.Vector3(0,1,0).add(group1.position), 2, 0xffff00 );
+    scene.add( arrowHelper );
+    
     if(dogProps.inMovement){
 
         previousDogPosition = [group1.position.x,group1.position.z,dogGroup.rotation.y];
@@ -604,24 +609,7 @@ function animate() {
 
         if(DEBUG) dogBoxHelper.update();
     }
-
-    
-
-    
-    
-    
-    
-
-    //var test = new THREE.Vector3();
-
-    //console.log(houseBox3[0])
-    /*
-    houseBox3[0].getCenter(test)
-    console.log("C",test)
-    houseBox3[0].getSize(test)
-    console.log("S",test)
-*/
-    dogAnimationHandler();
+    if(dogProps.rendered) dogAnimationHandler();
 
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
 
@@ -635,6 +623,7 @@ function animate() {
 }
 
 function dogAnimationHandler(){
+    
     if(dogProps.inMovement) runTweenGroup.update();
     else idleTweenGroup.update();
 }
@@ -673,8 +662,14 @@ function spawnBoxRandom(){
     for(let i = 0; i < sortedProb.length; i++){
         if(r <= sortedProb[i][1]){
             console.log(sortedProb[i])
-            var choice = anchorProps.points[sortedProb[i][0]];
+            if(sortedProb[i][0] == anchorProps.lastAnchorChoice){
+                r -= sortedProb[i][1];
+                continue;
+            }
+            anchorProps.lastAnchorChoice = sortedProb[i][0];
+            var choice = anchorProps.points[anchorProps.lastAnchorChoice];
             anchorSolid.position.set(choice.x,choice.y,choice.z);
+            anchorBox3 = new THREE.Box3().setFromObject(anchorSolid);
             break;
         }
         r -= sortedProb[i][1];
