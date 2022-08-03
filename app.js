@@ -6,7 +6,7 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = false;
+const DEBUG = true;
 var selPoint = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -287,6 +287,7 @@ var cardBox;
         color: "#634e15"
     })
     cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
+
     cardBox.position.y = -10;
     scene.add(cardBox);
 
@@ -392,7 +393,7 @@ gltfLoader.load(url, (gltf) => {
 
             //computeCameraDirection();
             
-            switch (e.key) {
+            switch (e.key.toLowerCase()) {
                 case "w": {
                     
                     
@@ -501,7 +502,7 @@ gltfLoader.load(url, (gltf) => {
             }
         }
         document.onkeyup = function (e) {
-            switch (e.key) {
+            switch (e.key.toLowerCase()) {
                 case "w": case "a": case "s": case "d": {
                     dogProps.inMovement = false;
                     inc = 0;
@@ -574,8 +575,8 @@ gltfLoader.load(url3, (gltf3) => {
  
 })
 
-var arrowHelper;
 var previousDogPosition = [];
+
 
 animate();
 
@@ -598,12 +599,6 @@ function animate() {
     
         
     }
-
-    /*
-    scene.remove(arrowHelper);
-    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(1,1,1).normalize(), 
-        new THREE.Vector3(0,1,0).add(group1.position), 0.5, 0xffff00 , 0.1, 0.1);
-    scene.add( arrowHelper );*/
     
     if(dogProps.inMovement){
 
@@ -630,9 +625,8 @@ function animate() {
     //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
 
 
-    //camera.updateProjectionMatrix();
+    camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
-    console.log(cardBox.position);
 
     dogProps.holdingBox ? 
         mainNode3.lookAt(anchorSolid.position.x, anchorSolid.position.y, anchorSolid.position.z) : 
