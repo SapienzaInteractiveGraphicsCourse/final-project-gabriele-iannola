@@ -6,7 +6,7 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = true;
+const DEBUG = false;
 var selPoint = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -558,6 +558,22 @@ gltfLoader.load(url2, (gltf2) => {
 
 })
 
+const url3 = './models/arrow/scene.gltf'
+var root3,mainNode3
+gltfLoader.load(url3, (gltf3) => {
+    root3 = gltf3.scene;
+
+    console.log(Utils.dumpObject(root3).join('\n'));
+    mainNode3 = root3.getObjectByName("RootNode");
+
+   
+    group1.add(mainNode3);
+    mainNode3.position.y += 20;
+    mainNode3.scale.y = 2
+    mainNode3.scale.z *= -1
+ 
+})
+
 var arrowHelper;
 var previousDogPosition = [];
 
@@ -583,11 +599,11 @@ function animate() {
         
     }
 
-    
+    /*
     scene.remove(arrowHelper);
-    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(directionsAxes[0].x,0,directionsAxes[0].y).normalize(), 
-        new THREE.Vector3(0,1,0).add(group1.position), 2, 0xffff00 );
-    scene.add( arrowHelper );
+    arrowHelper = new THREE.ArrowHelper( new THREE.Vector3(1,1,1).normalize(), 
+        new THREE.Vector3(0,1,0).add(group1.position), 0.5, 0xffff00 , 0.1, 0.1);
+    scene.add( arrowHelper );*/
     
     if(dogProps.inMovement){
 
@@ -616,7 +632,13 @@ function animate() {
 
     //camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
+    console.log(cardBox.position);
 
+    dogProps.holdingBox ? 
+        mainNode3.lookAt(anchorSolid.position.x, anchorSolid.position.y, anchorSolid.position.z) : 
+        mainNode3.lookAt(cardBox.position.x, cardBox.position.y, cardBox.position.z)
+
+    //mainNode3.lookAt(1,1,1);
     //TWEEN.update();
 
     renderer.render(scene, camera);
@@ -639,6 +661,7 @@ function spawnBoxRandom(){
     }while(checkIntersect())
 
     cardBox.position.y = cardboxProps.size / 2;
+    //console.log(cardBox.position);
 
     function checkIntersect(){
         for(var i = 0;i < houseBox3.length;i++){
