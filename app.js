@@ -7,6 +7,8 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
+const PLAY_TIME = 180;
+
 var selPoint = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -196,7 +198,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 
 const clock = new THREE.Clock(false);
-const PLAY_TIME = 180;
+
 
 
 var group1 = new THREE.Group();
@@ -507,6 +509,7 @@ gltfLoader.load(url, (gltf) => {
                     spawnBoxRandom();
                     clock.stop();
                     clock.start();
+                    document.getElementById("batteryDiv").style.display = "block";
                     break;
                 }
 
@@ -737,7 +740,11 @@ function timeHandler(){
     //console.log(batteryValue);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
-    if(batteryValue <= 0) clock.stop();
+    if(batteryValue <= 0){
+        console.log("GAME OVER")
+        clock.stop();
+        document.getElementById("batteryDiv").style.display = "none";
+    } 
     else{
         var batteryStateIndex = Math.ceil(batteryValue/25) - 1 ;
         document.getElementById("batteryImage").src = batteryStates[batteryStateIndex][0];
