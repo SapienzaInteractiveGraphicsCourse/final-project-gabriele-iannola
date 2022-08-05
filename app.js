@@ -6,7 +6,7 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = true;
+const DEBUG = false;
 var selPoint = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
@@ -161,6 +161,13 @@ var anchorProps = {
     lastAnchorChoice:-1,
 }
 
+var batteryStates = [
+    ["./textures/battery-1.png","b1"],
+    ["./textures/battery-2.png","b2"],
+    ["./textures/battery-3.png","b3"],
+    ["./textures/battery-4.png","b4"]
+]
+
 //creating a scene, camera and renderer
 
 const scene = new THREE.Scene();
@@ -188,9 +195,8 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 
-
-
-
+const clock = new THREE.Clock(false);
+const PLAY_TIME = 180;
 
 
 var group1 = new THREE.Group();
@@ -229,6 +235,8 @@ function resizeCanvas(){
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
+    //test.position.x = - window.innerWidth * 0.0027;
+    //test.position.y = - window.innerHeight * 0.002;
 }
 
 
@@ -495,7 +503,10 @@ gltfLoader.load(url, (gltf) => {
                 }
 
                 case "g":{
+                    console.log("startGame!")
                     spawnBoxRandom();
+                    clock.stop();
+                    clock.start();
                     break;
                 }
 
@@ -576,10 +587,31 @@ gltfLoader.load(url3, (gltf3) => {
 })
 
 var previousDogPosition = [];
+/*
+var test;
+{
+    var g = new THREE.PlaneGeometry(1, 1.5);
+    var bTexture = new THREE.TextureLoader().load( 'textures/battery-4.png' );
 
+// immediately use the texture for material creation
+const material = new THREE.MeshBasicMaterial( { map: texture } );
+    var m = new THREE.MeshBasicMaterial({
+        map: bTexture,
+        transparent:true
+    })
+    test = new THREE.Mesh(g, m);
+    test.scale.set(0.5,0.5)
+
+    camera.add(test);
+    test.position.x = - canvas.width * 0.0027;
+    test.position.y = - canvas.height * 0.002;
+    test.position.z-=3;
+ 
+}*/
 
 animate();
 
+//clock.start();
 
 function animate() {
     requestAnimationFrame(animate);
@@ -588,6 +620,9 @@ function animate() {
 
     //console.log(group1.position);
     //console.log(cardBox3)
+    //console.log(">>",clock.getElapsedTime())
+
+    timeHandler()
 
     if(DEBUG){
         lightHelper.update();
@@ -694,6 +729,20 @@ function spawnBoxRandom(){
     //console.log("prob",probDistribution)
 
     
+
+}
+
+function timeHandler(){
+    var batteryValue = Math.ceil((PLAY_TIME - clock.getElapsedTime())/PLAY_TIME * 100);
+    //console.log(batteryValue);
+    var batteryValueObj = document.getElementById("batteryValue");
+    batteryValueObj.innerHTML = batteryValue.toString() + "%";
+    if(batteryValue <= 0) clock.stop();
+    else{
+        var batteryStateIndex = Math.ceil(batteryValue/25) - 1 ;
+        document.getElementById("batteryImage").src = batteryStates[batteryStateIndex][0];
+        batteryValueObj.classList = [batteryStates[batteryStateIndex][1]]
+    }
 
 }
 
