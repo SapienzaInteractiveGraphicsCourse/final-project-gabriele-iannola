@@ -8,6 +8,9 @@ import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
 const PLAY_TIME = 180;
+const WIN_SCORE = 10;
+var deliveredPackages = 0;
+var batteryValue = 100;
 
 var selPoint = 0;
 var dogJoints = {
@@ -138,7 +141,8 @@ var dogProps = {
     speed: 0.15,
     size: new THREE.Vector3(),
     holdingBox: false,
-    rendered: false
+    rendered: false,
+    locked: true
 }
 
 var cardboxProps = {
@@ -402,7 +406,7 @@ gltfLoader.load(url, (gltf) => {
             //console.log(e);
 
             //computeCameraDirection();
-            
+            if(dogProps.locked) return;
             switch (e.key.toLowerCase()) {
                 case "w": {
                     
@@ -418,7 +422,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 0
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    console.log("forward");
+                    //console.log("forward");
                     break;
                 }
                 case "a": {
@@ -487,6 +491,7 @@ gltfLoader.load(url, (gltf) => {
 
                         if(cardBox3.intersectsBox(anchorBox3)){
                             console.log("POINT")
+                            deliveredPackages += 1;
                             spawnBoxRandom();
                         } 
 
@@ -505,11 +510,9 @@ gltfLoader.load(url, (gltf) => {
                 }
 
                 case "g":{
-                    console.log("startGame!")
-                    spawnBoxRandom();
-                    clock.stop();
-                    clock.start();
-                    document.getElementById("batteryDiv").style.display = "block";
+
+                    startNewGame()
+                    
                     break;
                 }
 
@@ -590,42 +593,40 @@ gltfLoader.load(url3, (gltf3) => {
 })
 
 var previousDogPosition = [];
-/*
-var test;
-{
-    var g = new THREE.PlaneGeometry(1, 1.5);
-    var bTexture = new THREE.TextureLoader().load( 'textures/battery-4.png' );
 
-// immediately use the texture for material creation
-const material = new THREE.MeshBasicMaterial( { map: texture } );
-    var m = new THREE.MeshBasicMaterial({
-        map: bTexture,
-        transparent:true
-    })
-    test = new THREE.Mesh(g, m);
-    test.scale.set(0.5,0.5)
-
-    camera.add(test);
-    test.position.x = - canvas.width * 0.0027;
-    test.position.y = - canvas.height * 0.002;
-    test.position.z-=3;
- 
-}*/
+var startButton = document.createElement("INPUT");
+startButton.setAttribute("type","button");
+startButton.value = "Start New Game";
+startButton.id = "gameStartButton";
+startButton.onclick = startNewGame;
+document.getElementById("container").appendChild(startButton)
 
 animate();
-
 //clock.start();
+
+var gameOver;
 
 function animate() {
     requestAnimationFrame(animate);
 
     controls.update();
 
-    //console.log(group1.position);
+    console.log(dogProps.locked);
     //console.log(cardBox3)
     //console.log(">>",clock.getElapsedTime())
 
-    timeHandler()
+    gameOver = timeHandler()
+    console.log(gameOver);
+    if(gameOver!=undefined){
+        console.log("STOP!")
+        if(!gameOver){
+            alert("You win!")
+            resetGame()
+        }else{
+            alert("You lose!")
+            resetGame()
+        }
+    }
 
     if(DEBUG){
         lightHelper.update();
@@ -666,6 +667,7 @@ function animate() {
     camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
+    if(dogProps.locked) group1.remove(mainNode3);
     dogProps.holdingBox ? 
         mainNode3.lookAt(anchorSolid.position.x, anchorSolid.position.y, anchorSolid.position.z) : 
         mainNode3.lookAt(cardBox.position.x, cardBox.position.y, cardBox.position.z)
@@ -736,16 +738,28 @@ function spawnBoxRandom(){
 }
 
 function timeHandler(){
-    var batteryValue = Math.ceil((PLAY_TIME - clock.getElapsedTime())/PLAY_TIME * 100);
-    //console.log(batteryValue);
+    batteryValue = Math.ceil((PLAY_TIME - clock.getElapsedTime())/PLAY_TIME * 100);
+    console.log("--",batteryValue);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
+
+    if(WIN_SCORE - deliveredPackages <= 0){
+        console.log("GAME WIN!")
+        deliveredPackages = 0;
+        clock.stop();
+        return 0;
+    }
+
     if(batteryValue <= 0){
         console.log("GAME OVER")
+        batteryValue = 100;
+        clock.elapsedTime = 0;
         clock.stop();
         document.getElementById("batteryDiv").style.display = "none";
+        return 1;
     } 
     else{
+        console.log("GOING")
         var batteryStateIndex = Math.ceil(batteryValue/25) - 1 ;
         document.getElementById("batteryImage").src = batteryStates[batteryStateIndex][0];
         batteryValueObj.classList = [batteryStates[batteryStateIndex][1]]
@@ -753,4 +767,23 @@ function timeHandler(){
 
 }
 
+function startNewGame(){
+    console.log("startGame!")
+    deliveredPackages = 0;
+    dogProps.locked = false;
+    spawnBoxRandom();
+    group1.add(mainNode3);
+    clock.stop();
+    clock.start();
+    startButton.style.display = "none";
+    document.getElementById("batteryDiv").style.display = "block";
+}
 
+function resetGame(){
+    gameOver = undefined;
+    startButton.style.display = "block";
+    group1.position.x = 0; group1.position.z = 0;
+    dogGroup.rotation.y = 0;
+    dogProps.locked = true;
+    dogProps.inMovement = false;
+}

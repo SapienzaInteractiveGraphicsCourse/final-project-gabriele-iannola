@@ -6,7 +6,7 @@ html, body {
 #container {
 position: relative;
 }
-#container canvas, #batteryDiv {
+#container canvas, #batteryDiv , #gameStartButton{
 position: absolute;
 }
 
