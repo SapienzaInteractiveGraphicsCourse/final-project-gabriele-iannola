@@ -7,8 +7,8 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
-const PLAY_TIME = 10;
-const WIN_SCORE = 10;
+const PLAY_TIME = 30;
+const WIN_SCORE = 2;
 var deliveredPackages = 0;
 var batteryValue = 100;
 
@@ -146,7 +146,7 @@ var dogProps = {
 }
 
 var cardboxProps = {
-    size: 0.3,
+    size: 0.02,
     pickupDistance: 2
 }
 
@@ -275,6 +275,8 @@ if(DEBUG){
     scene.add(lightHelper);
 }
 
+const gltfLoader = new GLTFLoader();
+
 //Creating an anchor point
 var anchorSolid;
 {
@@ -295,6 +297,7 @@ var anchorSolid;
 
 //Creating a box
 var cardBox;
+/*
 {
     var cardGeometry = new THREE.BoxGeometry(cardboxProps.size, cardboxProps.size, cardboxProps.size);
     var cardMaterial = new THREE.MeshBasicMaterial({
@@ -311,9 +314,29 @@ var cardBox;
         cardBoxHelper = new THREE.BoxHelper(cardBox);
         scene.add(cardBoxHelper);
     }
-}
+}*/
 
-const gltfLoader = new GLTFLoader();
+const url4 = './models/crate/source/model.gltf'
+gltfLoader.load(url4, (gltf4) => {
+    cardBox = gltf4.scene;
+
+    console.log(">>ROOT4--",Utils.dumpObject(cardBox).join('\n'));
+
+    cardBox.scale.set(cardboxProps.size,cardboxProps.size,cardboxProps.size);
+
+    cardBox.position.y = -10;
+    scene.add(cardBox);
+
+    cardBox3 = new THREE.Box3().setFromObject(cardBox);
+
+    if(DEBUG){
+        cardBoxHelper = new THREE.BoxHelper(cardBox);
+        scene.add(cardBoxHelper);
+    }
+ 
+})
+
+
 //const url = 'models/robotDog/source/robo_dog.gltf';
 const url = 'models/test/dog2.gltf'
 var root, mainNode;
@@ -483,7 +506,7 @@ gltfLoader.load(url, (gltf) => {
                         scene.add(cardBox);
                         console.log(group1.position);
 
-                        cardBox.scale.set(1, 1, 1);
+                        cardBox.scale.set(cardboxProps.size, cardboxProps.size, cardboxProps.size);
                         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z);
                         cardBox3 = new THREE.Box3().setFromObject(cardBox);
                         dogProps.holdingBox = false;
@@ -492,6 +515,7 @@ gltfLoader.load(url, (gltf) => {
                         if(cardBox3.intersectsBox(anchorBox3)){
                             console.log("POINT")
                             deliveredPackages += 1;
+                            document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + WIN_SCORE.toString();
                             spawnBoxRandom();
                         } 
 
@@ -500,8 +524,8 @@ gltfLoader.load(url, (gltf) => {
                         if (group1.position.distanceTo(cardBox.position) > cardboxProps.pickupDistance) break;
 
                         mainNode.getObjectByName("body").add(cardBox);
-                        cardBox.position.set(0, dogProps.size.y / 2.0 * 0.5, -dogProps.size.z / 2.0 * 0.2);
-                        cardBox.scale.set(1 / group1Props.scalingValue, 1 / group1Props.scalingValue, 1 / group1Props.scalingValue)
+                        cardBox.position.set(-3.2, dogProps.size.y / 2.0 * 0.2, -dogProps.size.z / 2.0 * 0.5);
+                        cardBox.scale.set(1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size)
                         dogProps.holdingBox = true;
                         console.log("pick")
                     }
@@ -511,7 +535,10 @@ gltfLoader.load(url, (gltf) => {
 
                 case "g":{
 
-                    startNewGame()
+                    console.log("DEBUG");
+                    cardBox.position.x = 0;
+                    cardBox.position.y = 0.5;
+                    cardBox.position.z = 0;
                     
                     break;
                 }
@@ -611,12 +638,11 @@ function animate() {
 
     controls.update();
 
-    console.log(dogProps.locked);
     //console.log(cardBox3)
     //console.log(">>",clock.getElapsedTime())
 
     gameOver = timeHandler()
-    console.log(gameOver);
+
     if(gameOver!=undefined){
         console.log("STOP!")
         if(!gameOver){
@@ -739,7 +765,6 @@ function spawnBoxRandom(){
 
 function timeHandler(){
     batteryValue = Math.ceil((PLAY_TIME - clock.getElapsedTime())/PLAY_TIME * 100);
-    console.log("--",batteryValue);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
 
@@ -756,10 +781,10 @@ function timeHandler(){
         clock.elapsedTime = 0;
         clock.stop();
         document.getElementById("batteryDiv").style.display = "none";
+        document.getElementById("crateDiv").style.display = "none";
         return 1;
     } 
     else{
-        console.log("GOING")
         var batteryStateIndex = Math.ceil(batteryValue/25) - 1 ;
         document.getElementById("batteryImage").src = batteryStates[batteryStateIndex][0];
         batteryValueObj.classList = [batteryStates[batteryStateIndex][1]]
@@ -777,6 +802,8 @@ function startNewGame(){
     clock.start();
     startButton.style.display = "none";
     document.getElementById("batteryDiv").style.display = "block";
+    document.getElementById("crateDiv").style.display = "block";
+    document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + WIN_SCORE.toString();
 }
 
 function resetGame(){
@@ -789,7 +816,7 @@ function resetGame(){
 
     if(dogProps.holdingBox){
         scene.add(cardBox);
-        cardBox.scale.set(1, 1, 1);
+        cardBox.scale.set(cardboxProps.size, cardboxProps.size, cardboxProps.size);
         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2 - 5, group1.position.z);
         cardBox3 = new THREE.Box3().setFromObject(cardBox);
         dogProps.holdingBox = false;

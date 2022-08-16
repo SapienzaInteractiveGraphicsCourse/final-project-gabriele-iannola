@@ -6,7 +6,7 @@ html, body {
 #container {
 position: relative;
 }
-#container canvas, #batteryDiv , #gameStartButton{
+#container canvas, #batteryDiv , #crateDiv, #gameStartButton{
 position: absolute;
 }
 
@@ -23,6 +23,16 @@ canvas {
    height:150px;
    margin-bottom: 1%;
    margin-left: 1%;
+}
+
+#crateDiv{
+   position:fixed;
+   bottom:0;
+   right:0;
+   width:150px;
+   height:150px;
+   margin-bottom: 1%;
+   margin-right: 1%;
 }
 
 #batteryValue{
@@ -49,4 +59,15 @@ canvas {
 
 .b1{
    color: #950a0a;
+}
+
+#crateValue{
+   position:relative;
+   bottom:60%;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 200%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
 }
