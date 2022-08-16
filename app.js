@@ -7,7 +7,7 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
-const PLAY_TIME = 180;
+const PLAY_TIME = 10;
 const WIN_SCORE = 10;
 var deliveredPackages = 0;
 var batteryValue = 100;
@@ -786,4 +786,14 @@ function resetGame(){
     dogGroup.rotation.y = 0;
     dogProps.locked = true;
     dogProps.inMovement = false;
+
+    if(dogProps.holdingBox){
+        scene.add(cardBox);
+        cardBox.scale.set(1, 1, 1);
+        cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2 - 5, group1.position.z);
+        cardBox3 = new THREE.Box3().setFromObject(cardBox);
+        dogProps.holdingBox = false;
+        console.log("release")
+    }
+    
 }
