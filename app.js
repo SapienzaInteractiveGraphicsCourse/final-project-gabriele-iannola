@@ -6,13 +6,14 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = false;
-const PLAY_TIME = 30;
+const DEBUG = true;
+const PLAY_TIME = 1200;
 const WIN_SCORE = 2;
 var deliveredPackages = 0;
 var batteryValue = 100;
 
 var selPoint = 0;
+var bBoxVisible = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0 ,
     "leg3": 0, "move": 0, "foot3": 0 ,
@@ -535,11 +536,10 @@ gltfLoader.load(url, (gltf) => {
 
                 case "g":{
 
-                    console.log("DEBUG");
-                    cardBox.position.x = 0;
-                    cardBox.position.y = 0.5;
-                    cardBox.position.z = 0;
-                    
+                    console.log(">> SELECTED ",bBoxVisible + 1);
+                    houseBoxHelpers[bBoxVisible].visible = false;
+                    bBoxVisible = (bBoxVisible +1) % houseBoxHelpers.length;
+                    houseBoxHelpers[bBoxVisible].visible = true;
                     break;
                 }
 
@@ -585,16 +585,21 @@ gltfLoader.load(url2, (gltf2) => {
     mainNode2.scale.set(0.008,0.008,0.008);
     gltf2.scene.updateMatrixWorld( true )
     mainNode2.children[0].scale.set(3,3,3);
-    mainNode2.children.slice(1).forEach((obj,ndx) => {
+    mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj,ndx) => {
+
+        //console.log("!!",obj.name,/(house|Column|Stairs)/.test(obj.name))
+
         //obj.scale.set(0.008,0.008,0.008)
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
         //obj.scale.set(1,1,1)
         //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
         if(DEBUG){
             houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            houseBoxHelpers[ndx].visible = false;
             scene.add(houseBoxHelpers[ndx]);
         }
     });
+    houseBoxHelpers[bBoxVisible].visible = true;
     mainNode2.position.y -= 0.05;
     scene.add(mainNode2);
     /*
