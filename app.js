@@ -6,9 +6,9 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = true;
-const PLAY_TIME = 1200;
-const WIN_SCORE = 2;
+const DEBUG = false;
+const PLAY_TIME = 120;
+const WIN_SCORE = 5;
 var deliveredPackages = 0;
 var batteryValue = 100;
 
@@ -730,7 +730,7 @@ gltfLoader.load(url2, (gltf2) => {
             scene.add(houseBoxHelpers[l+ndx]);
         }
     });
-    houseBoxHelpers[bBoxVisible].visible = true;
+    if(DEBUG) houseBoxHelpers[bBoxVisible].visible = true;
     mainNode2.position.y -= 0.05;
     scene.add(mainNode2);
 
