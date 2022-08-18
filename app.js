@@ -128,6 +128,90 @@ var cardBox3,cardBoxHelper;
 var anchorBox3,anchorBoxHelper;
 var houseBoxHelpers = [];
 var houseBox3 = [];
+var houseCenters = [null,null,null,null,null,null,null,
+    new THREE.Vector3(14.826502929687502,1.29999951171875,4.340710327148437 ),
+    null,
+    new THREE.Vector3(15.241329711914062, 2.6015561523437505,-13.95047412109375),
+    new THREE.Vector3(-5.019078857421838, 1.300001953125005, -13.177295104980466),
+    new THREE.Vector3(-13.569443604034273, 2.5874274902343766,-5.73854101505352),
+    null,
+    new THREE.Vector3(-13.508938475692084,2.566589467773448, -13.918114012433827),
+    null,
+    null,
+    new THREE.Vector3(-12.877217163043511, 1.2999990234375005, 6.642443009623262),
+    new THREE.Vector3(-13.561354370117188, 1.2999980468750003,14.238321655273438),
+    new THREE.Vector3(6.063547424316406, 1.299998046875, 14.2446982421875 ),
+];
+var houseSizes = [null,null,null,null,null,null,null,
+    new THREE.Vector3(4.0364550781250035, 2.600000000000001, 4.08925463867188 ),
+    null,
+    new THREE.Vector3(5.16795336914063, 5.203108398437502, 4.292383789062505),
+    new THREE.Vector3(4.155188964843825, 2.600000000000125, 2.6994700927734367),
+    new THREE.Vector3(4.2005129808451915, 5.174853027343756, 4.932226816048464),
+    null,
+    new THREE.Vector3(4.091873782453362, 5.133177509765613, 4.157498740244558),
+    null,
+    null,
+    new THREE.Vector3(2.610190882538079, 2.600000000000003, 4.1747274483571815),
+    new THREE.Vector3(4.1364650878906275, 2.6000000000000014, 4.0892521972656315),
+    new THREE.Vector3(2.4611295166015617, 2.600000000000001, 3.999998779296874 ),
+];
+
+
+//TEST ON # 7 
+//Object { x: 14.826502929687502, y: 1.29999951171875, z: 4.340710327148437 }
+    //Object { x: 4.0364550781250035, y: 2.600000000000001, z: 4.08925463867188 }
+/*
+    TEST ON # 9 
+    Object { x: 15.241329711914062, y: 2.6015561523437505, z: -13.95047412109375 }
+     
+    Object { x: 5.16795336914063, y: 5.203108398437502, z: 4.292383789062505 }
+    app.js:892:13*/
+/* 
+    TEST ON # 10 
+    Object { x: -5.019078857421838, y: 1.300001953125005, z: -13.177295104980466 }
+     
+    Object { x: 4.155188964843825, y: 2.600000000000125, z: 2.6994700927734367 }
+    app.js:892:13*/
+    
+/*
+TEST ON # 11 
+Object { x: -13.569443604034273, y: 2.5874274902343766, z: -5.73854101505352 }
+ 
+Object { x: 4.2005129808451915, y: 5.174853027343756, z: 4.932226816048464 }
+app.js:892:13
+
+*/ 
+
+/*
+TEST ON # 13 
+Object { x: -13.508938475692084, y: 2.566589467773448, z: -13.918114012433827 }
+ 
+Object { x: 4.091873782453362, y: 5.133177509765613, z: 4.157498740244558 }
+app.js:892:13
+*/
+
+/*
+TEST ON # 16 
+Object { x: -12.877217163043511, y: 1.2999990234375005, z: 6.642443009623262 }
+ 
+Object { x: 2.610190882538079, y: 2.600000000000003, z: 4.1747274483571815 }
+app.js:892:13
+*/
+
+/*TEST ON # 17 
+Object { x: -13.561354370117188, y: 1.2999980468750003, z: 14.238321655273438 }
+ 
+Object { x: 4.1364650878906275, y: 2.6000000000000014, z: 4.0892521972656315 }
+app.js:892:13
+*/
+
+/*TEST ON # 18 
+Object { x: 6.063547424316406, y: 1.299998046875, z: 14.2446982421875 }
+ 
+Object { x: 2.4611295166015617, y: 2.600000000000001, z: 3.999998779296874 }
+app.js:892:13
+*/
 
 var inc = 0, shift = 0, directionIndex = 0;
 var directionsAxes = [new THREE.Vector2(0,0),new THREE.Vector2(0,0)];
@@ -321,7 +405,7 @@ const url4 = './models/crate/source/model.gltf'
 gltfLoader.load(url4, (gltf4) => {
     cardBox = gltf4.scene;
 
-    console.log(">>ROOT4--",Utils.dumpObject(cardBox).join('\n'));
+    //console.log(">>ROOT4--",Utils.dumpObject(cardBox).join('\n'));
 
     cardBox.scale.set(cardboxProps.size,cardboxProps.size,cardboxProps.size);
 
@@ -346,14 +430,14 @@ gltfLoader.load(url, (gltf) => {
     root = gltf.scene;
 
 
-    console.log(Utils.dumpObject(root).join('\n'));
+    //console.log(Utils.dumpObject(root).join('\n'));
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
     //mainNode = root.getObjectByName("RootNode");
     //mainNode = root.getObjectByName("blockbench_export");
     mainNode = root.getObjectByName("Scene");
     
 
-    console.log(Utils.dumpObject(mainNode.getObjectByName("Scene")).join('\n'))
+    //console.log(Utils.dumpObject(mainNode.getObjectByName("Scene")).join('\n'))
 
     computeCameraDirection();
     group1.add(camera);
@@ -543,6 +627,45 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
 
+                case "i":{
+                    houseSizes[bBoxVisible].x += 0.1;
+                    break;
+                }
+                case "k":{
+                    houseSizes[bBoxVisible].x -= 0.1;
+                    break;
+                }
+                case "o":{
+                    houseSizes[bBoxVisible].z += 0.1;
+                    break;
+                }
+                case "l":{
+                    houseSizes[bBoxVisible].z -= 0.1;
+                    break;
+                }
+
+                case "arrowup":{
+                    houseCenters[bBoxVisible].x += 0.1;
+                    break;
+                }
+                case "arrowdown":{
+                    houseCenters[bBoxVisible].x -= 0.1;
+                    break;
+                }
+                case "arrowleft":{
+                    houseCenters[bBoxVisible].z += 0.1;
+                    break;
+                }
+                case "arrowright":{
+                    houseCenters[bBoxVisible].z -= 0.1;
+                    break;
+                }
+
+                default:{
+                    console.log(e);
+                    break;
+                }
+
             }
         }
         document.onkeyup = function (e) {
@@ -579,7 +702,7 @@ var root2,mainNode2
 gltfLoader.load(url2, (gltf2) => {
     root2 = gltf2.scene;
 
-    console.log(Utils.dumpObject(root2).join('\n'));
+    //console.log(Utils.dumpObject(root2).join('\n'));
     mainNode2 = root2.getObjectByName("RootNode");
 
     mainNode2.scale.set(0.008,0.008,0.008);
@@ -591,10 +714,20 @@ gltfLoader.load(url2, (gltf2) => {
 
         //obj.scale.set(0.008,0.008,0.008)
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
+
+        if(houseCenters[ndx] == null){
+            houseCenters[ndx] = new THREE.Vector3(0,0,0);
+            houseBox3[ndx].getCenter(houseCenters[ndx]);
+            houseSizes[ndx] = new THREE.Vector3(0,0,0);
+            houseBox3[ndx].getSize(houseSizes[ndx]);
+        }
+        
+        
         //obj.scale.set(1,1,1)
         //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
         if(DEBUG){
-            houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            houseBoxHelpers[ndx] = new THREE.Box3Helper(houseBox3[ndx],"#00ff00");
             houseBoxHelpers[ndx].visible = false;
             scene.add(houseBoxHelpers[ndx]);
         }
@@ -602,6 +735,8 @@ gltfLoader.load(url2, (gltf2) => {
     houseBoxHelpers[bBoxVisible].visible = true;
     mainNode2.position.y -= 0.05;
     scene.add(mainNode2);
+
+    test();
     /*
     houseBox3.shift();
     houseBoxHelpers.shift();*/
@@ -613,7 +748,7 @@ var root3,mainNode3
 gltfLoader.load(url3, (gltf3) => {
     root3 = gltf3.scene;
 
-    console.log(Utils.dumpObject(root3).join('\n'));
+    //console.log(Utils.dumpObject(root3).join('\n'));
     mainNode3 = root3.getObjectByName("RootNode");
 
    
@@ -624,6 +759,8 @@ gltfLoader.load(url3, (gltf3) => {
  
 })
 
+
+
 var previousDogPosition = [];
 
 var startButton = document.createElement("INPUT");
@@ -633,6 +770,7 @@ startButton.id = "gameStartButton";
 startButton.onclick = startNewGame;
 document.getElementById("container").appendChild(startButton)
 
+
 animate();
 //clock.start();
 
@@ -640,10 +778,10 @@ var gameOver;
 
 function animate() {
     requestAnimationFrame(animate);
-
+    
+    test();
     controls.update();
 
-    //console.log(cardBox3)
     //console.log(">>",clock.getElapsedTime())
 
     gameOver = timeHandler()
@@ -664,7 +802,8 @@ function animate() {
         cardBoxHelper.update();
         anchorBoxHelper.update();
         houseBoxHelpers.forEach(helper => {
-            helper.update();
+            //helper.update();
+            helper.updateMatrixWorld();
         });  
     
         
@@ -829,3 +968,69 @@ function resetGame(){
     }
     
 }
+
+function test(){
+    
+    /*
+    houseBox3.forEach((x,ndx)=>{
+        x.expandByVector()
+    })*/
+    console.log("TEST ON #",bBoxVisible,houseCenters[bBoxVisible],houseSizes[bBoxVisible]);
+    houseBox3[bBoxVisible].setFromCenterAndSize(houseCenters[bBoxVisible],houseSizes[bBoxVisible])
+}
+
+//TEST ON # 7 
+//Object { x: 14.826502929687502, y: 1.29999951171875, z: 4.340710327148437 }
+    //Object { x: 4.0364550781250035, y: 2.600000000000001, z: 4.08925463867188 }
+/*
+    TEST ON # 9 
+    Object { x: 15.241329711914062, y: 2.6015561523437505, z: -13.95047412109375 }
+     
+    Object { x: 5.16795336914063, y: 5.203108398437502, z: 4.292383789062505 }
+    app.js:892:13*/
+/* 
+    TEST ON # 10 
+    Object { x: -5.019078857421838, y: 1.300001953125005, z: -13.177295104980466 }
+     
+    Object { x: 4.155188964843825, y: 2.600000000000125, z: 2.6994700927734367 }
+    app.js:892:13*/
+    
+/*
+TEST ON # 11 
+Object { x: -13.569443604034273, y: 2.5874274902343766, z: -5.73854101505352 }
+ 
+Object { x: 4.2005129808451915, y: 5.174853027343756, z: 4.932226816048464 }
+app.js:892:13
+
+*/ 
+
+/*
+TEST ON # 13 
+Object { x: -13.508938475692084, y: 2.566589467773448, z: -13.918114012433827 }
+ 
+Object { x: 4.091873782453362, y: 5.133177509765613, z: 4.157498740244558 }
+app.js:892:13
+*/
+
+/*
+TEST ON # 16 
+Object { x: -12.877217163043511, y: 1.2999990234375005, z: 6.642443009623262 }
+ 
+Object { x: 2.610190882538079, y: 2.600000000000003, z: 4.1747274483571815 }
+app.js:892:13
+*/
+
+/*TEST ON # 17 
+Object { x: -13.561354370117188, y: 1.2999980468750003, z: 14.238321655273438 }
+ 
+Object { x: 4.1364650878906275, y: 2.6000000000000014, z: 4.0892521972656315 }
+app.js:892:13
+*/
+
+/*TEST ON # 18 
+Object { x: 6.063547424316406, y: 1.299998046875, z: 14.2446982421875 }
+ 
+Object { x: 2.4611295166015617, y: 2.600000000000001, z: 3.999998779296874 }
+app.js:892:13
+*/
+    
