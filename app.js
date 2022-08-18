@@ -130,88 +130,55 @@ var houseBoxHelpers = [];
 var houseBox3 = [];
 var houseCenters = [null,null,null,null,null,null,null,
     new THREE.Vector3(14.826502929687502,1.29999951171875,4.340710327148437 ),
-    null,
+
+    new THREE.Vector3(4.224515623873705, 2.500002929687501, -16.241349621053242),
+
     new THREE.Vector3(15.241329711914062, 2.6015561523437505,-13.95047412109375),
     new THREE.Vector3(-5.019078857421838, 1.300001953125005, -13.177295104980466),
     new THREE.Vector3(-13.569443604034273, 2.5874274902343766,-5.73854101505352),
-    null,
+
+    new THREE.Vector3(-3.0059666748046867, 2.499998046875, 14.119145874023436),
+
     new THREE.Vector3(-13.508938475692084,2.566589467773448, -13.918114012433827),
-    null,
-    null,
+
+    new THREE.Vector3(14.00606677246094, 2.577151611328125, -5.333100463867188),
+    new THREE.Vector3(14.056039055103856, 2.585351769531876, 12.57357834923541),
+
     new THREE.Vector3(-12.877217163043511, 1.2999990234375005, 6.642443009623262),
     new THREE.Vector3(-13.561354370117188, 1.2999980468750003,14.238321655273438),
     new THREE.Vector3(6.063547424316406, 1.299998046875, 14.2446982421875 ),
+    null,
+
+    new THREE.Vector3(5.024515623873702, 2.500002929687501, -13.04134962105325 ),
+    new THREE.Vector3(-6.20596667480468, 2.499998046875, 15.019145874023433 ),
+    new THREE.Vector3(16.50606677246094, 2.577151611328125, -6.6331004638671835 ),
+    new THREE.Vector3(11.556039055103865, 2.585351769531876, 13.373578349235407 ),
 ];
+
+
 var houseSizes = [null,null,null,null,null,null,null,
     new THREE.Vector3(4.0364550781250035, 2.600000000000001, 4.08925463867188 ),
-    null,
+
+    new THREE.Vector3(4.204630194582437, 5.000000000000006, 4.1324650756227435 ),
+
     new THREE.Vector3(5.16795336914063, 5.203108398437502, 4.292383789062505),
     new THREE.Vector3(4.155188964843825, 2.600000000000125, 2.6994700927734367),
     new THREE.Vector3(4.2005129808451915, 5.174853027343756, 4.932226816048464),
-    null,
+    new THREE.Vector3(4.132896728515635, 5.000000000000001, 4.186828857421878 ),
     new THREE.Vector3(4.091873782453362, 5.133177509765613, 4.157498740244558),
-    null,
-    null,
+    new THREE.Vector3(2.5138000488281294, 5.154301269531252, 4.943546142578128 ),
+    new THREE.Vector3(2.5489535991456393, 5.170708013378246, 4.075576840596366 ),
     new THREE.Vector3(2.610190882538079, 2.600000000000003, 4.1747274483571815),
     new THREE.Vector3(4.1364650878906275, 2.6000000000000014, 4.0892521972656315),
     new THREE.Vector3(2.4611295166015617, 2.600000000000001, 3.999998779296874 ),
+    null,
+    
+    new THREE.Vector3(2.5046301945824365, 5.000000000000006, 2.4324650756227424 ),
+    new THREE.Vector3(2.332896728515634, 5.000000000000001, 2.4868288574218766 ),
+    new THREE.Vector3(2.4138000488281293, 5.154301269531252, 2.44354614257813 ),
+    new THREE.Vector3(2.348953599145639, 5.170708013378246, 2.4755768405963643 ),
 ];
 
-
-//TEST ON # 7 
-//Object { x: 14.826502929687502, y: 1.29999951171875, z: 4.340710327148437 }
-    //Object { x: 4.0364550781250035, y: 2.600000000000001, z: 4.08925463867188 }
-/*
-    TEST ON # 9 
-    Object { x: 15.241329711914062, y: 2.6015561523437505, z: -13.95047412109375 }
-     
-    Object { x: 5.16795336914063, y: 5.203108398437502, z: 4.292383789062505 }
-    app.js:892:13*/
-/* 
-    TEST ON # 10 
-    Object { x: -5.019078857421838, y: 1.300001953125005, z: -13.177295104980466 }
-     
-    Object { x: 4.155188964843825, y: 2.600000000000125, z: 2.6994700927734367 }
-    app.js:892:13*/
-    
-/*
-TEST ON # 11 
-Object { x: -13.569443604034273, y: 2.5874274902343766, z: -5.73854101505352 }
- 
-Object { x: 4.2005129808451915, y: 5.174853027343756, z: 4.932226816048464 }
-app.js:892:13
-
-*/ 
-
-/*
-TEST ON # 13 
-Object { x: -13.508938475692084, y: 2.566589467773448, z: -13.918114012433827 }
- 
-Object { x: 4.091873782453362, y: 5.133177509765613, z: 4.157498740244558 }
-app.js:892:13
-*/
-
-/*
-TEST ON # 16 
-Object { x: -12.877217163043511, y: 1.2999990234375005, z: 6.642443009623262 }
- 
-Object { x: 2.610190882538079, y: 2.600000000000003, z: 4.1747274483571815 }
-app.js:892:13
-*/
-
-/*TEST ON # 17 
-Object { x: -13.561354370117188, y: 1.2999980468750003, z: 14.238321655273438 }
- 
-Object { x: 4.1364650878906275, y: 2.6000000000000014, z: 4.0892521972656315 }
-app.js:892:13
-*/
-
-/*TEST ON # 18 
-Object { x: 6.063547424316406, y: 1.299998046875, z: 14.2446982421875 }
- 
-Object { x: 2.4611295166015617, y: 2.600000000000001, z: 3.999998779296874 }
-app.js:892:13
-*/
 
 var inc = 0, shift = 0, directionIndex = 0;
 var directionsAxes = [new THREE.Vector2(0,0),new THREE.Vector2(0,0)];
@@ -709,8 +676,8 @@ gltfLoader.load(url2, (gltf2) => {
     gltf2.scene.updateMatrixWorld( true )
     mainNode2.children[0].scale.set(3,3,3);
     mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj,ndx) => {
-
-        //console.log("!!",obj.name,/(house|Column|Stairs)/.test(obj.name))
+        
+        //console.log("!!",ndx,obj.name,/(020|015|013|012)$/.test(obj.name))
 
         //obj.scale.set(0.008,0.008,0.008)
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
@@ -720,6 +687,8 @@ gltfLoader.load(url2, (gltf2) => {
             houseBox3[ndx].getCenter(houseCenters[ndx]);
             houseSizes[ndx] = new THREE.Vector3(0,0,0);
             houseBox3[ndx].getSize(houseSizes[ndx]);
+        }else{
+            houseBox3[ndx].setFromCenterAndSize(houseCenters[ndx],houseSizes[ndx])
         }
         
         
@@ -728,8 +697,37 @@ gltfLoader.load(url2, (gltf2) => {
         if(DEBUG){
             //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
             houseBoxHelpers[ndx] = new THREE.Box3Helper(houseBox3[ndx],"#00ff00");
-            houseBoxHelpers[ndx].visible = false;
+            //houseBoxHelpers[ndx].visible = false;
             scene.add(houseBoxHelpers[ndx]);
+        }
+    });
+
+    var l = houseBox3.length;
+
+    mainNode2.children.filter(x => /(020|015|013|012)$/.test(x.name)).forEach((obj,ndx) => {
+
+        //console.log("!!",obj.name,/(020|015|013|012)$/.test(obj.name))
+
+        //obj.scale.set(0.008,0.008,0.008)
+        houseBox3[l+ndx]= new THREE.Box3().setFromObject(obj);
+
+        if(houseCenters[l+ndx] == null){
+            houseCenters[l+ndx] = new THREE.Vector3(0,0,0);
+            houseBox3[l+ndx].getCenter(houseCenters[l+ndx]);
+            houseSizes[l+ndx] = new THREE.Vector3(0,0,0);
+            houseBox3[l+ndx].getSize(houseSizes[l+ndx]);
+        }else{
+            houseBox3[l+ndx].setFromCenterAndSize(houseCenters[l+ndx],houseSizes[l+ndx])
+        }
+        
+        
+        //obj.scale.set(1,1,1)
+        //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
+        if(DEBUG){
+            //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            houseBoxHelpers[l+ndx] = new THREE.Box3Helper(houseBox3[l+ndx],"#00ff00");
+            //houseBoxHelpers[l+ndx].visible = false;
+            scene.add(houseBoxHelpers[l+ndx]);
         }
     });
     houseBoxHelpers[bBoxVisible].visible = true;
@@ -779,7 +777,7 @@ var gameOver;
 function animate() {
     requestAnimationFrame(animate);
     
-    test();
+    //test();
     controls.update();
 
     //console.log(">>",clock.getElapsedTime())
@@ -979,58 +977,3 @@ function test(){
     houseBox3[bBoxVisible].setFromCenterAndSize(houseCenters[bBoxVisible],houseSizes[bBoxVisible])
 }
 
-//TEST ON # 7 
-//Object { x: 14.826502929687502, y: 1.29999951171875, z: 4.340710327148437 }
-    //Object { x: 4.0364550781250035, y: 2.600000000000001, z: 4.08925463867188 }
-/*
-    TEST ON # 9 
-    Object { x: 15.241329711914062, y: 2.6015561523437505, z: -13.95047412109375 }
-     
-    Object { x: 5.16795336914063, y: 5.203108398437502, z: 4.292383789062505 }
-    app.js:892:13*/
-/* 
-    TEST ON # 10 
-    Object { x: -5.019078857421838, y: 1.300001953125005, z: -13.177295104980466 }
-     
-    Object { x: 4.155188964843825, y: 2.600000000000125, z: 2.6994700927734367 }
-    app.js:892:13*/
-    
-/*
-TEST ON # 11 
-Object { x: -13.569443604034273, y: 2.5874274902343766, z: -5.73854101505352 }
- 
-Object { x: 4.2005129808451915, y: 5.174853027343756, z: 4.932226816048464 }
-app.js:892:13
-
-*/ 
-
-/*
-TEST ON # 13 
-Object { x: -13.508938475692084, y: 2.566589467773448, z: -13.918114012433827 }
- 
-Object { x: 4.091873782453362, y: 5.133177509765613, z: 4.157498740244558 }
-app.js:892:13
-*/
-
-/*
-TEST ON # 16 
-Object { x: -12.877217163043511, y: 1.2999990234375005, z: 6.642443009623262 }
- 
-Object { x: 2.610190882538079, y: 2.600000000000003, z: 4.1747274483571815 }
-app.js:892:13
-*/
-
-/*TEST ON # 17 
-Object { x: -13.561354370117188, y: 1.2999980468750003, z: 14.238321655273438 }
- 
-Object { x: 4.1364650878906275, y: 2.6000000000000014, z: 4.0892521972656315 }
-app.js:892:13
-*/
-
-/*TEST ON # 18 
-Object { x: 6.063547424316406, y: 1.299998046875, z: 14.2446982421875 }
- 
-Object { x: 2.4611295166015617, y: 2.600000000000001, z: 3.999998779296874 }
-app.js:892:13
-*/
-    
