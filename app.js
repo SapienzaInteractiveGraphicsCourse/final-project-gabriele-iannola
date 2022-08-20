@@ -7,8 +7,8 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
-const PLAY_TIME = 120;
-const WIN_SCORE = 5;
+const PLAY_TIME = 10;
+const WIN_SCORE = 1;
 var deliveredPackages = 0;
 var batteryValue = 100;
 
@@ -763,18 +763,28 @@ var previousDogPosition = [];
 
 var startButton = document.createElement("INPUT");
 startButton.setAttribute("type","button");
-startButton.value = "Start New Game";
+startButton.value = "START";
 startButton.id = "gameStartButton";
 startButton.onclick = startNewGame;
 document.getElementById("container").appendChild(startButton)
 
+var alert = document.getElementsByClassName("alert")[0]
+var gameOverText = alert.children[0];
+var retryButton = document.createElement("INPUT");
+retryButton.setAttribute("type","button");
+retryButton.value = "RETRY";
+retryButton.classList.add("retryButton");
+retryButton.onclick = resetGame;
+alert.appendChild(retryButton);
 
 animate();
 //clock.start();
 
 var gameOver;
+var stop = false;
 
 function animate() {
+    if(stop) return;
     requestAnimationFrame(animate);
     
     //test();
@@ -786,13 +796,20 @@ function animate() {
 
     if(gameOver!=undefined){
         console.log("STOP!")
+        
         if(!gameOver){
-            alert("You win!")
-            resetGame()
+            //alert("You win!")
+            gameOverText.innerHTML = "YOU WIN!";
+            alert.style.display = "block";
+            //resetGame()
         }else{
-            alert("You lose!")
-            resetGame()
+            //alert("You lose!")
+            gameOverText.innerHTML = "YOU LOSE!";
+            alert.style.display = "block";
+            
+            //resetGame()
         }
+        stop = true
     }
 
     if(DEBUG){
@@ -951,6 +968,7 @@ function startNewGame(){
 function resetGame(){
     gameOver = undefined;
     startButton.style.display = "block";
+    alert.style.display = "none";
     group1.position.x = 0; group1.position.z = 0;
     dogGroup.rotation.y = 0;
     dogProps.locked = true;
@@ -964,6 +982,9 @@ function resetGame(){
         dogProps.holdingBox = false;
         console.log("release")
     }
+
+    stop = false;
+    animate();
     
 }
 

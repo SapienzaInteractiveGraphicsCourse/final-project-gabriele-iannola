@@ -6,7 +6,7 @@ html, body {
 #container {
 position: relative;
 }
-#container canvas, #batteryDiv , #crateDiv, #gameStartButton{
+#container canvas, #batteryDiv , #crateDiv, #gameStartButton, .alert{
 position: absolute;
 }
 
@@ -17,6 +17,7 @@ canvas {
 }
 
 #batteryDiv{
+   display: none;
    position:fixed;
    bottom:0;
    width:100px;
@@ -26,6 +27,7 @@ canvas {
 }
 
 #crateDiv{
+   display: none;
    position:fixed;
    bottom:0;
    right:0;
@@ -71,3 +73,61 @@ canvas {
    text-shadow: 0 0 10px #FFFFFF;
    color: #4b240e;
 }
+
+#gameStartButton{
+   display:block;
+   position:fixed;
+   width:200px;
+   height:100px;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+
+   background-color:rgb(166, 123, 4);
+   border-color: #6e3c0a;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 200%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
+}
+
+.alert{
+   /*display: none;*/
+   position:fixed;
+   width:300px;
+   height:150px;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+
+   background-color:rgb(166, 123, 4);
+   border-color: #6e3c0a;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 200%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
+}
+
+.retryButton{
+   display:block;
+   position:fixed;
+   width:50%;
+   height:20%;
+   bottom: 0;
+   left: 50%;
+   transform: translate(-50%, -50%);
+
+   background-color:rgb(103, 78, 9);
+   border-color: #6e3c0a;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 50%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
+}
+
