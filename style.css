@@ -94,7 +94,7 @@ canvas {
 }
 
 .alert{
-   /*display: none;*/
+   display: none;
    position:fixed;
    width:300px;
    height:150px;
@@ -102,14 +102,14 @@ canvas {
    left: 50%;
    transform: translate(-50%, -50%);
 
-   background-color:rgb(166, 123, 4);
-   border-color: #6e3c0a;
    text-align: center;
    font-family: sans-serif;
    font-size: 200%;
    font-weight: bold;
    text-shadow: 0 0 10px #FFFFFF;
-   color: #4b240e;
+   border-style: solid;
+
+   
 }
 
 .retryButton{
@@ -120,14 +120,49 @@ canvas {
    bottom: 0;
    left: 50%;
    transform: translate(-50%, -50%);
+   
+   border-style: solid;
 
-   background-color:rgb(103, 78, 9);
-   border-color: #6e3c0a;
    text-align: center;
    font-family: sans-serif;
    font-size: 50%;
    font-weight: bold;
    text-shadow: 0 0 10px #FFFFFF;
-   color: #4b240e;
+   
 }
 
+.winAlert {
+   background-color:rgb(67, 154, 78);
+   border-color: rgb(77, 164, 90);
+   color: #0d4e23;
+}
+
+.loseAlert {
+   background-color:rgb(226, 76, 70);
+   border-color: rgb(232, 80, 74);
+   color: #8a180e;
+}
+
+.winButton {
+   background-color:rgb(49, 84, 53);
+   border-color: rgb(77, 164, 90);
+   color: #0c2d17;
+}
+
+.winButton:hover {
+   background-color:rgb(52, 111, 60);
+   border-color: rgb(77, 164, 90);
+   color: #0c2d17;
+}
+
+.loseButton {
+   background-color:rgb(176, 54, 50);
+   border-color: rgb(232, 80, 74);
+   color: #5f3633;
+}
+
+.loseButton:hover {
+   background-color:rgb(193, 76, 72);
+   border-color: rgb(232, 80, 74);
+   color: #5f3633;
+}

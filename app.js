@@ -7,7 +7,7 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 const DEBUG = false;
-const PLAY_TIME = 10;
+const PLAY_TIME = 20;
 const WIN_SCORE = 1;
 var deliveredPackages = 0;
 var batteryValue = 100;
@@ -800,11 +800,19 @@ function animate() {
         if(!gameOver){
             //alert("You win!")
             gameOverText.innerHTML = "YOU WIN!";
+            alert.classList.add("winAlert");
+            alert.classList.remove("loseAlert");
+            retryButton.classList.add("winButton");
+            retryButton.classList.remove("loseButton");
             alert.style.display = "block";
             //resetGame()
         }else{
             //alert("You lose!")
             gameOverText.innerHTML = "YOU LOSE!";
+            alert.classList.add("loseAlert");
+            alert.classList.remove("winAlert");
+            retryButton.classList.add("loseButton");
+            retryButton.classList.remove("winButton");
             alert.style.display = "block";
             
             //resetGame()
@@ -967,6 +975,8 @@ function startNewGame(){
 
 function resetGame(){
     gameOver = undefined;
+    document.getElementById("batteryDiv").style.display = "none";
+    document.getElementById("crateDiv").style.display = "none";
     startButton.style.display = "block";
     alert.style.display = "none";
     group1.position.x = 0; group1.position.z = 0;
