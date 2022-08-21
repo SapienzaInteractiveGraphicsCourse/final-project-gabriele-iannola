@@ -6,11 +6,17 @@ import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
-const DEBUG = false;
-const PLAY_TIME = 20;
-const WIN_SCORE = 1;
+var gameVariables = {
+    DEBUG : false,
+    PLAY_TIME : 300,
+    WIN_SCORE : 1,
+}
+
 var deliveredPackages = 0;
 var batteryValue = 100;
+
+var gui = new dat.GUI();
+
 
 var selPoint = 0;
 var bBoxVisible = 0;
@@ -155,7 +161,6 @@ var houseCenters = [null,null,null,null,null,null,null,
     new THREE.Vector3(11.556039055103865, 2.585351769531876, 13.373578349235407 ),
 ];
 
-
 var houseSizes = [null,null,null,null,null,null,null,
     new THREE.Vector3(4.0364550781250035, 2.600000000000001, 4.08925463867188 ),
 
@@ -250,6 +255,9 @@ const renderer = new THREE.WebGLRenderer({
     antialias: true,
     //alpha:true
 });
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 
@@ -260,7 +268,7 @@ const clock = new THREE.Clock(false);
 var group1 = new THREE.Group();
 var dogGroup = new THREE.Group();
 
-if(DEBUG){
+if(gameVariables.DEBUG){
     const axesHelperScene = new AxesHelper(5);
     scene.add(axesHelperScene);
     const axesHelperTest = new AxesHelper(5);
@@ -299,7 +307,7 @@ function resizeCanvas(){
 
 
 const controls = new OrbitControls(camera, canvas);
-if (!DEBUG) {
+if (!gameVariables.DEBUG) {
     controls.mouseButtons = { LEFT: 0 }
     controls.maxDistance = cameraRadius;
     controls.minDistance = cameraRadius;
@@ -311,21 +319,53 @@ if (!DEBUG) {
 
 //create a light
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.3))
+var lightFolder = gui.addFolder("Lights")
+lightFolder.open();
 
-const lightColor = 0xffeeee;
-const intensity = 2;
-const light = new THREE.DirectionalLight(lightColor, intensity);
-light.position.set(20, 20, 20);
+scene.add(new THREE.AmbientLight(0xffffff, 0.2))
+
+var lightProps = {
+    "lightColor": 0xffffff,
+    "lightIntensity": 2,
+    "distance": 100,
+}
+
+
+const light = new THREE.DirectionalLight(lightProps.lightColor, lightProps.lightIntensity);
+
+light.position.set(lightProps.distance, lightProps.distance, lightProps.distance);
+light.castShadow = true;
+
+//Set up shadow properties for the light
+var lightShadowCastRange = 10;
+light.shadow.camera.top = lightShadowCastRange;
+light.shadow.camera.bottom = -lightShadowCastRange;
+light.shadow.camera.left = -lightShadowCastRange;
+light.shadow.camera.right = lightShadowCastRange;
+light.shadow.camera.near = 0.1; // default
+light.shadow.camera.far = 500; // default
+light.shadow.bias = -0.0005
 
 scene.add(light);
 
-var lightHelper = null;
+lightFolder.add(light,"intensity",0,5,0.5);
 
-if(DEBUG){
+lightFolder.add(light,"castShadow")
+lightFolder.add(light.shadow.camera,"near",0.1,0.5,0.1);
+lightFolder.add(light.shadow.camera,"far",0,500,1);
+lightFolder.add(light.shadow,"bias",-0.002,0,0.0001);
+
+var lightHelper = null;
+var lightShadowHelper = null;
+
+if(gameVariables.DEBUG){
     lightHelper = new DirectionalLightHelper(light);
-    scene.add(lightHelper);
+    //scene.add(lightHelper);
+    lightShadowHelper = new THREE.CameraHelper( light.shadow.camera );
+    scene.add( lightShadowHelper );
 }
+
+//#######################################################
 
 const gltfLoader = new GLTFLoader();
 
@@ -341,7 +381,7 @@ var anchorSolid;
     scene.add(anchorSolid);
 
     anchorBox3 = new THREE.Box3().setFromObject(anchorSolid);
-    if(DEBUG){
+    if(gameVariables.DEBUG){
         anchorBoxHelper = new THREE.BoxHelper(anchorSolid);
         scene.add(anchorBoxHelper);
     }
@@ -349,39 +389,34 @@ var anchorSolid;
 
 //Creating a box
 var cardBox;
-/*
-{
-    var cardGeometry = new THREE.BoxGeometry(cardboxProps.size, cardboxProps.size, cardboxProps.size);
-    var cardMaterial = new THREE.MeshBasicMaterial({
-        color: "#634e15"
-    })
-    cardBox = new THREE.Mesh(cardGeometry, cardMaterial);
 
-    cardBox.position.y = -10;
-    scene.add(cardBox);
-
-    cardBox3 = new THREE.Box3().setFromObject(cardBox);
-
-    if(DEBUG){
-        cardBoxHelper = new THREE.BoxHelper(cardBox);
-        scene.add(cardBoxHelper);
-    }
-}*/
 
 const url4 = './models/crate/source/model.gltf'
 gltfLoader.load(url4, (gltf4) => {
     cardBox = gltf4.scene;
+    cardBox.traverse( function( node ) {
+
+        if ( node.type === 'Mesh' ) { 
+            node.castShadow = true;
+            node.receiveShadow = true;
+         }
+
+    } );
+    
 
     //console.log(">>ROOT4--",Utils.dumpObject(cardBox).join('\n'));
+    
 
     cardBox.scale.set(cardboxProps.size,cardboxProps.size,cardboxProps.size);
 
     cardBox.position.y = -10;
+    
+    
     scene.add(cardBox);
 
     cardBox3 = new THREE.Box3().setFromObject(cardBox);
 
-    if(DEBUG){
+    if(gameVariables.DEBUG){
         cardBoxHelper = new THREE.BoxHelper(cardBox);
         scene.add(cardBoxHelper);
     }
@@ -395,7 +430,14 @@ var root, mainNode;
 gltfLoader.load(url, (gltf) => {
 
     root = gltf.scene;
+    root.traverse( function( node ) {
 
+        if ( node.type === 'Mesh' ) { 
+            node.castShadow = true;
+            node.receiveShadow = true;
+         }
+
+    } );
 
     //console.log(Utils.dumpObject(root).join('\n'));
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
@@ -409,6 +451,7 @@ gltfLoader.load(url, (gltf) => {
     computeCameraDirection();
     group1.add(camera);
     //group1.add(mainNode);
+
     dogGroup.add(mainNode);
     group1.add(dogGroup);
     group1.scale.set(group1Props.scalingValue, group1Props.scalingValue, group1Props.scalingValue)
@@ -418,10 +461,10 @@ gltfLoader.load(url, (gltf) => {
     dogBox3.getSize(dogProps.size);
     //group1.add(dogBox3)
     dogBoxHelper = new THREE.BoxHelper(dogGroup);
-    if(DEBUG)scene.add(dogBoxHelper);
+    if(gameVariables.DEBUG)scene.add(dogBoxHelper);
     
 
-    //light.target = mainNode;
+    light.target = mainNode;
     //scene.add(root);
 
     runTweenGroup = new TWEEN.Group();
@@ -567,7 +610,7 @@ gltfLoader.load(url, (gltf) => {
                         if(cardBox3.intersectsBox(anchorBox3)){
                             console.log("POINT")
                             deliveredPackages += 1;
-                            document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + WIN_SCORE.toString();
+                            document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
                             spawnBoxRandom();
                         } 
 
@@ -669,12 +712,23 @@ var root2,mainNode2
 gltfLoader.load(url2, (gltf2) => {
     root2 = gltf2.scene;
 
-    //console.log(Utils.dumpObject(root2).join('\n'));
+    root2.traverse( function( node ) {
+
+        if ( node.type === 'Mesh' ) { 
+            if(node.name != "Plane001_02_-_Default_0") node.castShadow = true;
+            node.receiveShadow = true;
+         }
+
+    } );
+    
+
+    console.log(Utils.dumpObject(root2).join('\n'));
     mainNode2 = root2.getObjectByName("RootNode");
 
     mainNode2.scale.set(0.008,0.008,0.008);
     gltf2.scene.updateMatrixWorld( true )
     mainNode2.children[0].scale.set(3,3,3);
+    
     mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj,ndx) => {
         
         //console.log("!!",ndx,obj.name,/(020|015|013|012)$/.test(obj.name))
@@ -694,7 +748,7 @@ gltfLoader.load(url2, (gltf2) => {
         
         //obj.scale.set(1,1,1)
         //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
-        if(DEBUG){
+        if(gameVariables.DEBUG){
             //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
             houseBoxHelpers[ndx] = new THREE.Box3Helper(houseBox3[ndx],"#00ff00");
             //houseBoxHelpers[ndx].visible = false;
@@ -723,15 +777,16 @@ gltfLoader.load(url2, (gltf2) => {
         
         //obj.scale.set(1,1,1)
         //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
-        if(DEBUG){
+        if(gameVariables.DEBUG){
             //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
             houseBoxHelpers[l+ndx] = new THREE.Box3Helper(houseBox3[l+ndx],"#00ff00");
             //houseBoxHelpers[l+ndx].visible = false;
             scene.add(houseBoxHelpers[l+ndx]);
         }
     });
-    if(DEBUG) houseBoxHelpers[bBoxVisible].visible = true;
+    if(gameVariables.DEBUG) houseBoxHelpers[bBoxVisible].visible = true;
     mainNode2.position.y -= 0.05;
+
     scene.add(mainNode2);
 
     test();
@@ -820,8 +875,11 @@ function animate() {
         stop = true
     }
 
-    if(DEBUG){
+    console.log(light.shadow.camera.near)
+
+    if(gameVariables.DEBUG){
         lightHelper.update();
+        lightShadowHelper.update();
         cardBoxHelper.update();
         anchorBoxHelper.update();
         houseBoxHelpers.forEach(helper => {
@@ -850,13 +908,16 @@ function animate() {
             }
         }
 
-        if(DEBUG) dogBoxHelper.update();
+        if(gameVariables.DEBUG) dogBoxHelper.update();
     }
     if(dogProps.rendered) dogAnimationHandler();
 
-    //console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
+    console.log("CAMERA POS",camera.position,"\nDOG POS",mainNode.position,"\nGROUP1 POS",group1.position,"\nLIGHT POS",light.position)
 
 
+
+    light.shadow.camera.updateProjectionMatrix();
+    light.shadow.camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
     camera.updateProjectionMatrix();
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
@@ -931,11 +992,11 @@ function spawnBoxRandom(){
 }
 
 function timeHandler(){
-    batteryValue = Math.ceil((PLAY_TIME - clock.getElapsedTime())/PLAY_TIME * 100);
+    batteryValue = Math.ceil((gameVariables.PLAY_TIME - clock.getElapsedTime())/gameVariables.PLAY_TIME * 100);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
 
-    if(WIN_SCORE - deliveredPackages <= 0){
+    if(gameVariables.WIN_SCORE - deliveredPackages <= 0){
         console.log("GAME WIN!")
         deliveredPackages = 0;
         clock.stop();
@@ -970,7 +1031,7 @@ function startNewGame(){
     startButton.style.display = "none";
     document.getElementById("batteryDiv").style.display = "block";
     document.getElementById("crateDiv").style.display = "block";
-    document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + WIN_SCORE.toString();
+    document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
 }
 
 function resetGame(){
