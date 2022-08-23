@@ -7,7 +7,7 @@ import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 import * as Utils from './libs/utils.js'
 
 var gameVariables = {
-    DEBUG: true,
+    DEBUG: false,
     PLAY_TIME: 300,
     WIN_SCORE: 1,
 }
@@ -238,7 +238,7 @@ const scene = new THREE.Scene();
 
 const loader = new THREE.TextureLoader();
 const texture = loader.load(
-    'models/skybox/goegap_4k.jpg',
+    'models/skybox/Perseverance_Panorama_8k-2.jpg',
     () => {
         const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
         rt.fromEquirectangularTexture(renderer, texture);
