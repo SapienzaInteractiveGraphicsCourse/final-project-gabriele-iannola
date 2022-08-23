@@ -257,6 +257,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -445,6 +446,8 @@ gltfLoader.load(url, (gltf) => {
         }
 
     });
+
+    
 
     //console.log(Utils.dumpObject(root).join('\n'));
     //mainNode = root.getObjectByName("GLTF_SceneRootNode");
@@ -884,7 +887,7 @@ function animate() {
         stop = true
     }
 
-    console.log(light.shadow.camera.near)
+    //console.log(light.shadow.camera.near)
 
     if (gameVariables.DEBUG) {
         lightHelper.update();
@@ -928,7 +931,7 @@ function animate() {
     }
     if (dogProps.rendered) dogAnimationHandler();
 
-    console.log("CAMERA POS", camera.position, "\nDOG POS", mainNode.position, "\nGROUP1 POS", group1.position, "\nLIGHT POS", light.position)
+    //console.log("CAMERA POS", camera.position, "\nDOG POS", mainNode.position, "\nGROUP1 POS", group1.position, "\nLIGHT POS", light.position)
 
 
 
