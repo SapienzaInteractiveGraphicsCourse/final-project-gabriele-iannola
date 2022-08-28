@@ -9,7 +9,7 @@ import * as Utils from './libs/utils.js'
 var gameVariables = {
     DEBUG: false,
     PLAY_TIME: 180,
-    WIN_SCORE: 5,
+    WIN_SCORE: 1,
 }
 
 var deliveredPackages = 0;
@@ -394,6 +394,85 @@ if (gameVariables.DEBUG) {
     scene.add(lightShadowHelper);
 }
 
+
+// audio Management
+
+var audioProps = {
+    "ambientVolume":0.5,
+    "SFXVolume":0.5
+}
+
+const listener = new THREE.AudioListener();
+camera.add( listener );
+
+const soundAmbient = new THREE.Audio( listener );
+const soundStep = new THREE.Audio( listener );
+const soundPick = new THREE.Audio( listener );
+const soundDrop = new THREE.Audio( listener );
+const soundClick = new THREE.Audio( listener );
+const soundPoint = new THREE.Audio( listener );
+const soundWin = new THREE.Audio( listener );
+const soundLose = new THREE.Audio( listener );
+
+const audioLoader = new THREE.AudioLoader();
+
+
+audioLoader.load( 'sounds/ambient.mp3', function( buffer ) {
+	soundAmbient.setBuffer( buffer );
+	soundAmbient.setLoop( true );
+	soundAmbient.setVolume( audioProps.ambientVolume );	
+});
+
+audioLoader.load( 'sounds/step.mp3', function( buffer ) {
+	soundStep.setBuffer( buffer );
+	soundStep.setLoop( true );
+	soundStep.setVolume( audioProps.SFXVolume );	
+});
+audioLoader.load( 'sounds/pick.mp3', function( buffer ) {
+	soundPick.setBuffer( buffer );
+	soundPick.setVolume( audioProps.SFXVolume );	
+});
+
+audioLoader.load( 'sounds/release.wav', function( buffer ) {
+	soundDrop.setBuffer( buffer );
+	soundDrop.setVolume( audioProps.SFXVolume );	
+});
+
+audioLoader.load( 'sounds/click.wav', function( buffer ) {
+	soundClick.setBuffer( buffer );
+	soundClick.setVolume( audioProps.SFXVolume );	
+});
+
+audioLoader.load( 'sounds/point.wav', function( buffer ) {
+	soundPoint.setBuffer( buffer );
+	soundPoint.setVolume( audioProps.SFXVolume );	
+});
+
+audioLoader.load( 'sounds/win.mp3', function( buffer ) {
+	soundWin.setBuffer( buffer );
+	soundWin.setVolume( audioProps.SFXVolume );	
+});
+audioLoader.load( 'sounds/lose.wav', function( buffer ) {
+	soundLose.setBuffer( buffer );
+	soundLose.setVolume( audioProps.SFXVolume );	
+});
+
+var soundFolder = gui.addFolder("Audio")
+soundFolder.open();
+soundFolder.add(audioProps,"ambientVolume",0,1,0.1).onChange(()=>{
+    soundAmbient.setVolume( audioProps.ambientVolume );
+})
+soundFolder.add(audioProps,"SFXVolume",0,1,0.1).onChange(()=>{
+    soundStep.setVolume( audioProps.SFXVolume );
+    soundPick.setVolume( audioProps.SFXVolume );
+    soundDrop.setVolume( audioProps.SFXVolume );
+    soundClick.setVolume( audioProps.SFXVolume );
+    soundPoint.setVolume( audioProps.SFXVolume );
+    soundWin.setVolume( audioProps.SFXVolume );
+    soundLose.setVolume( audioProps.SFXVolume );
+})
+
+
 //#######################################################
 
 const gltfLoader = new GLTFLoader();
@@ -599,8 +678,11 @@ gltfLoader.load(url, (gltf) => {
                         cardBox3 = new THREE.Box3().setFromObject(cardBox);
                         dogProps.holdingBox = false;
                         console.log("release")
+                        soundDrop.play();
 
                         if (cardBox3.intersectsBox(anchorBox3)) {
+                            
+                            soundPoint.play();
                             console.log("POINT")
                             deliveredPackages += 1;
                             document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
@@ -615,6 +697,7 @@ gltfLoader.load(url, (gltf) => {
                         cardBox.position.set(-3.2, dogProps.size.y / 2.0 * 0.2, -dogProps.size.z / 2.0 * 0.5);
                         cardBox.scale.set(1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size)
                         dogProps.holdingBox = true;
+                        soundPick.play();
                         console.log("pick")
                     }
 
@@ -623,41 +706,7 @@ gltfLoader.load(url, (gltf) => {
 
                 case "g": {
 
-                    scene.background = new THREE.Color(255,0,0)
-                    break;
-                }
-
-                case "i": {
-                    houseSizes[bBoxVisible].x += 0.1;
-                    break;
-                }
-                case "k": {
-                    houseSizes[bBoxVisible].x -= 0.1;
-                    break;
-                }
-                case "o": {
-                    houseSizes[bBoxVisible].z += 0.1;
-                    break;
-                }
-                case "l": {
-                    houseSizes[bBoxVisible].z -= 0.1;
-                    break;
-                }
-
-                case "arrowup": {
-                    houseCenters[bBoxVisible].x += 0.1;
-                    break;
-                }
-                case "arrowdown": {
-                    houseCenters[bBoxVisible].x -= 0.1;
-                    break;
-                }
-                case "arrowleft": {
-                    houseCenters[bBoxVisible].z += 0.1;
-                    break;
-                }
-                case "arrowright": {
-                    houseCenters[bBoxVisible].z -= 0.1;
+                    soundStep.play();
                     break;
                 }
 
@@ -812,25 +861,33 @@ function animate() {
 
     if (gameOver != undefined) {
         console.log("STOP!")
-
+        
         if (!gameOver) {
             //alert("You win!")
+            dogProps.inMovement = false;
+            dogAnimationHandler();
+            
             gameOverText.innerHTML = "YOU WIN!";
             alert.classList.add("winAlert");
             alert.classList.remove("loseAlert");
             retryButton.classList.add("winButton");
             retryButton.classList.remove("loseButton");
             alert.style.display = "block";
+            soundStep.stop(); 
+            soundWin.play();
             //resetGame()
         } else {
             //alert("You lose!")
+            dogProps.inMovement = false;
+            dogAnimationHandler();
             gameOverText.innerHTML = "YOU LOSE!";
             alert.classList.add("loseAlert");
             alert.classList.remove("winAlert");
             retryButton.classList.add("loseButton");
             retryButton.classList.remove("winButton");
             alert.style.display = "block";
-
+            soundStep.stop(); 
+            soundLose.play();
             //resetGame()
         }
         stop = true
@@ -899,23 +956,22 @@ function animate() {
     if(dogProps.holdingBox){
         if (dogProps.holdingBox && dogBox3.intersectsBox(anchorBox3)){
 
-            console.log("C")
             crateHelpDiv.style.display = "block";
             crateHelpText.innerHTML = "Drop package";
             
         }else{
-            console.log("D")
+            
             crateHelpDiv.style.display = "none";     
         }
     }else {
         if (group1.position.distanceTo(cardBox.position) <= cardboxProps.pickupDistance){
 
-            console.log("A")
+            
             crateHelpDiv.style.display = "block";
             crateHelpText.innerHTML = "Pick package";
             
         }else{
-            console.log("B")
+            
             crateHelpDiv.style.display = "none";     
         }
     }
@@ -925,8 +981,14 @@ function animate() {
 
 function dogAnimationHandler() {
 
-    if (dogProps.inMovement) runTweenGroup.update();
-    else idleTweenGroup.update();
+    if (dogProps.inMovement){
+        if(!soundStep.isPlaying) soundStep.play(); 
+        runTweenGroup.update();
+    } 
+    else{
+        if(soundStep.isPlaying) soundStep.stop(); 
+        idleTweenGroup.update();
+    } 
 }
 
 function spawnBoxRandom() {
@@ -1007,6 +1069,8 @@ function timeHandler() {
 }
 
 function startNewGame() {
+    soundAmbient.play();
+    soundClick.play();
     console.log("startGame!")
     deliveredPackages = 0;
     dogProps.locked = false;
@@ -1021,6 +1085,7 @@ function startNewGame() {
 }
 
 function resetGame() {
+    soundClick.play();
     gameOver = undefined;
     document.getElementById("batteryDiv").style.display = "none";
     document.getElementById("crateDiv").style.display = "none";
