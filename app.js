@@ -8,8 +8,8 @@ import * as Utils from './libs/utils.js'
 
 var gameVariables = {
     DEBUG: false,
-    PLAY_TIME: 300,
-    WIN_SCORE: 1,
+    PLAY_TIME: 180,
+    WIN_SCORE: 5,
 }
 
 var deliveredPackages = 0;
@@ -17,8 +17,6 @@ var batteryValue = 100;
 
 var gui = new dat.GUI();
 
-
-var selPoint = 0;
 var bBoxVisible = 0;
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0,
@@ -231,6 +229,26 @@ var batteryStates = [
     ["./textures/battery-4.png", "b4"]
 ]
 
+
+var startButton = document.createElement("INPUT");
+startButton.setAttribute("type", "button");
+startButton.value = "START";
+startButton.id = "gameStartButton";
+startButton.onclick = startNewGame;
+document.getElementById("container").appendChild(startButton)
+
+var alert = document.getElementsByClassName("alert")[0]
+var gameOverText = alert.children[0];
+var retryButton = document.createElement("INPUT");
+retryButton.setAttribute("type", "button");
+retryButton.value = "RETRY";
+retryButton.classList.add("retryButton");
+retryButton.onclick = resetGame;
+alert.appendChild(retryButton);
+
+var crateHelpDiv = document.getElementById("crateHelpDiv");
+var crateHelpText = document.getElementsByClassName("crateHelpText")[0];
+
 //creating a scene, camera and renderer
 
 const scene = new THREE.Scene();
@@ -243,9 +261,10 @@ const texture = loader.load(
         const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
         rt.fromEquirectangularTexture(renderer, texture);
         scene.background = rt.texture;
+        
     });
 
-
+scene.fog = new THREE.FogExp2(0xffe2c6,0);
 const aspect = window.innerWidth / window.innerHeight;
 
 const canvas = document.querySelector('#c');
@@ -261,6 +280,8 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
+var postFolder = gui.addFolder("Fog")
+postFolder.add(scene.fog,"density",0,0.005,0.0001)
 
 const clock = new THREE.Clock(false);
 
@@ -285,59 +306,47 @@ if (gameVariables.DEBUG) {
     scene.add(gridHelper);
 }
 
-
-//scene.add(mesh);
-//console.log(mesh)
-
-
 var camera;
 var cameraRadius = 60;
 
-/*
-height = 2;
-width = aspect * height;
-camera = new THREE.OrthographicCamera(-width,width,height,-height,0.1,100);*/
 
 camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 camera.position.set(0, 30, -cameraRadius);
-//camera.position.set(-cameraRadius, 0, 0);
 
 window.addEventListener('resize', resizeCanvas);
 
 function resizeCanvas() {
+
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
     renderer.setSize(window.innerWidth, window.innerHeight);
-    //test.position.x = - window.innerWidth * 0.0027;
-    //test.position.y = - window.innerHeight * 0.002;
+
 }
 
 
 const controls = new OrbitControls(camera, canvas);
 if (!gameVariables.DEBUG) {
+
     controls.mouseButtons = { LEFT: 0 }
     controls.maxDistance = cameraRadius;
     controls.minDistance = cameraRadius;
     controls.minPolarAngle = THREE.MathUtils.degToRad(20);
     controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
+
 }
-
-
 
 //create a light
 
-var lightFolder = gui.addFolder("Lights")
-lightFolder.open();
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.2))
-
 var lightProps = {
+    "ambientColor": 0xffffff,
+    "ambientIntensity":0.1,
     "lightColor": 0xffffff,
     "lightIntensity": 2,
     "distance": 100,
 }
 
+var ambient = new THREE.AmbientLight(lightProps.ambientColor, lightProps.ambientIntensity)
+scene.add(ambient)
 
 const light = new THREE.DirectionalLight(lightProps.lightColor, lightProps.lightIntensity);
 
@@ -356,7 +365,19 @@ light.shadow.bias = -0.0005
 
 scene.add(light);
 
+
+var ambientFolder = gui.addFolder("Ambient Light")
+ambientFolder.open();
+
+ambientFolder.add(ambient, "intensity", 0, 1, 0.1);
+
+
+var lightFolder = gui.addFolder("Lights")
+lightFolder.open();
+
 lightFolder.add(light, "intensity", 0, 5, 0.5);
+lightFolder.add(light.position, "x", -100, 100, 1);
+lightFolder.add(light.position, "z", -100, 100, 1);
 
 lightFolder.add(light, "castShadow")
 lightFolder.add(light.shadow.camera, "near", 0.1, 0.5, 0.1);
@@ -368,7 +389,7 @@ var lightShadowHelper = null;
 
 if (gameVariables.DEBUG) {
     lightHelper = new DirectionalLightHelper(light);
-    //scene.add(lightHelper);
+    scene.add(lightHelper);
     lightShadowHelper = new THREE.CameraHelper(light.shadow.camera);
     scene.add(lightShadowHelper);
 }
@@ -432,7 +453,6 @@ gltfLoader.load(url4, (gltf4) => {
 })
 
 
-//const url = 'models/robotDog/source/robo_dog.gltf';
 const url = 'models/test/dog2.gltf'
 var root, mainNode;
 gltfLoader.load(url, (gltf) => {
@@ -441,18 +461,13 @@ gltfLoader.load(url, (gltf) => {
     root.traverse(function (node) {
 
         if (node.type === 'Mesh') {
+            
             node.castShadow = true;
             node.receiveShadow = true;
         }
 
     });
 
-    
-
-    //console.log(Utils.dumpObject(root).join('\n'));
-    //mainNode = root.getObjectByName("GLTF_SceneRootNode");
-    //mainNode = root.getObjectByName("RootNode");
-    //mainNode = root.getObjectByName("blockbench_export");
     mainNode = root.getObjectByName("Scene");
 
 
@@ -469,13 +484,11 @@ gltfLoader.load(url, (gltf) => {
 
     dogBox3 = new THREE.Box3().setFromObject(dogGroup);
     dogBox3.getSize(dogProps.size);
-    //group1.add(dogBox3)
     dogBoxHelper = new THREE.BoxHelper(dogGroup);
     if (gameVariables.DEBUG) scene.add(dogBoxHelper);
 
 
     light.target = mainNode;
-    //scene.add(root);
 
     runTweenGroup = new TWEEN.Group();
     idleTweenGroup = new TWEEN.Group();
@@ -525,80 +538,50 @@ gltfLoader.load(url, (gltf) => {
     setKeyboardControl();
 
     controls.addEventListener("change", computeCameraDirection);
-    //setMouseControl();
 
     function setKeyboardControl() {
         document.onkeydown = function (e) {
 
-            //console.log("DIFF",cameraDirection,cameraTangent,cameraDirection.dot(cameraTangent));
-            //console.log(e);
-
-            //computeCameraDirection();
             if (dogProps.locked) return;
             switch (e.key.toLowerCase()) {
                 case "w": {
 
-
                     directionIndex = 0;
-
-
-                    /*
-                    group1.position.x += speed * cameraDirection.x
-                    group1.position.z += speed * cameraDirection.y*/
-
                     inc = 1
                     shift = 0
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    //console.log("forward");
+                    
                     break;
                 }
                 case "a": {
+
                     directionIndex = 1;
-
-
-                    /*
-                    group1.position.x += speed * cameraTangent.x
-                    group1.position.z += speed * cameraTangent.y*/
-
                     inc = 1
                     shift = 1 / 2;
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    //console.log("left");
+                    
                     break;
                 }
                 case "s": {
+
                     directionIndex = 0;
-
-
-
-                    /*
-                    group1.position.x -= speed * cameraDirection.x
-                    group1.position.z -= speed * cameraDirection.y*/
-                    //dogGroup.rotation.y = Math.PI + Math.atan2(cameraDirection.x, cameraDirection.y);
-
                     inc = -1
                     shift = 1
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    //console.log("back");
+                    
                     break;
                 }
                 case "d": {
+
                     directionIndex = 1;
-
-
-                    /*
-                    group1.position.x -= speed * cameraTangent.x
-                    group1.position.z -= speed * cameraTangent.y
-                    dogGroup.rotation.y = 3 * Math.PI / 2 + Math.atan2(cameraDirection.x, cameraDirection.y);*/
-
                     inc = -1
                     shift = 3 / 2
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    //console.log("right");
+                    
                     break;
                 }
 
@@ -640,10 +623,7 @@ gltfLoader.load(url, (gltf) => {
 
                 case "g": {
 
-                    console.log(">> SELECTED ", bBoxVisible + 1);
-                    houseBoxHelpers[bBoxVisible].visible = false;
-                    bBoxVisible = (bBoxVisible + 1) % houseBoxHelpers.length;
-                    houseBoxHelpers[bBoxVisible].visible = true;
+                    scene.background = new THREE.Color(255,0,0)
                     break;
                 }
 
@@ -709,7 +689,6 @@ gltfLoader.load(url, (gltf) => {
 
     }
 
-    //tween1.start();
     runningAnimationProperties.tweens[0].start();
     idleAnimationProperties.tweens[0].start();
 
@@ -741,9 +720,6 @@ gltfLoader.load(url2, (gltf2) => {
 
     mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj, ndx) => {
 
-        //console.log("!!",ndx,obj.name,/(020|015|013|012)$/.test(obj.name))
-
-        //obj.scale.set(0.008,0.008,0.008)
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
 
         if (houseCenters[ndx] == null) {
@@ -755,13 +731,9 @@ gltfLoader.load(url2, (gltf2) => {
             houseBox3[ndx].setFromCenterAndSize(houseCenters[ndx], houseSizes[ndx])
         }
 
-
-        //obj.scale.set(1,1,1)
-        //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
         if (gameVariables.DEBUG) {
-            //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+
             houseBoxHelpers[ndx] = new THREE.Box3Helper(houseBox3[ndx], "#00ff00");
-            //houseBoxHelpers[ndx].visible = false;
             scene.add(houseBoxHelpers[ndx]);
         }
     });
@@ -770,9 +742,6 @@ gltfLoader.load(url2, (gltf2) => {
 
     mainNode2.children.filter(x => /(020|015|013|012)$/.test(x.name)).forEach((obj, ndx) => {
 
-        //console.log("!!",obj.name,/(020|015|013|012)$/.test(obj.name))
-
-        //obj.scale.set(0.008,0.008,0.008)
         houseBox3[l + ndx] = new THREE.Box3().setFromObject(obj);
 
         if (houseCenters[l + ndx] == null) {
@@ -799,10 +768,7 @@ gltfLoader.load(url2, (gltf2) => {
 
     scene.add(mainNode2);
 
-    test();
-    /*
-    houseBox3.shift();
-    houseBoxHelpers.shift();*/
+    //test();
 
 })
 
@@ -825,23 +791,6 @@ gltfLoader.load(url3, (gltf3) => {
 
 
 var previousDogPosition = [];
-
-var startButton = document.createElement("INPUT");
-startButton.setAttribute("type", "button");
-startButton.value = "START";
-startButton.id = "gameStartButton";
-startButton.onclick = startNewGame;
-document.getElementById("container").appendChild(startButton)
-
-var alert = document.getElementsByClassName("alert")[0]
-var gameOverText = alert.children[0];
-var retryButton = document.createElement("INPUT");
-retryButton.setAttribute("type", "button");
-retryButton.value = "RETRY";
-retryButton.classList.add("retryButton");
-retryButton.onclick = resetGame;
-alert.appendChild(retryButton);
-
 
 
 animate();
@@ -945,9 +894,32 @@ function animate() {
         mainNode3.lookAt(anchorSolid.position.x, anchorSolid.position.y, anchorSolid.position.z) :
         mainNode3.lookAt(cardBox.position.x, cardBox.position.y, cardBox.position.z)
 
-    //mainNode3.lookAt(1,1,1);
-    //TWEEN.update();
+    
 
+    if(dogProps.holdingBox){
+        if (dogProps.holdingBox && dogBox3.intersectsBox(anchorBox3)){
+
+            console.log("C")
+            crateHelpDiv.style.display = "block";
+            crateHelpText.innerHTML = "Drop package";
+            
+        }else{
+            console.log("D")
+            crateHelpDiv.style.display = "none";     
+        }
+    }else {
+        if (group1.position.distanceTo(cardBox.position) <= cardboxProps.pickupDistance){
+
+            console.log("A")
+            crateHelpDiv.style.display = "block";
+            crateHelpText.innerHTML = "Pick package";
+            
+        }else{
+            console.log("B")
+            crateHelpDiv.style.display = "none";     
+        }
+    }
+    
     renderer.render(scene, camera);
 }
 
@@ -968,7 +940,6 @@ function spawnBoxRandom() {
     } while (checkIntersect())
 
     cardBox.position.y = cardboxProps.size / 2;
-    //console.log(cardBox.position);
 
     function checkIntersect() {
         for (var i = 0; i < houseBox3.length; i++) {
@@ -982,7 +953,6 @@ function spawnBoxRandom() {
     console.log("box positioned at", rx, rz)
 
     var distance = anchorProps.points.map((point) => cardBox.position.distanceTo(point));
-    //var distanceSum = 
     var probDistribution = distance.map((x => x / (distance.reduce(((total, curr) => total + curr), 0))))
 
     var sortedProb = probDistribution.map((x) => [probDistribution.indexOf(x), x]).sort((a, b) => a[1] - b[1]);
@@ -1004,9 +974,6 @@ function spawnBoxRandom() {
         }
         r -= sortedProb[i][1];
     }
-    //console.log("prob",probDistribution)
-
-
 
 }
 
@@ -1080,10 +1047,6 @@ function resetGame() {
 
 function test() {
 
-    /*
-    houseBox3.forEach((x,ndx)=>{
-        x.expandByVector()
-    })*/
     console.log("TEST ON #", bBoxVisible, houseCenters[bBoxVisible], houseSizes[bBoxVisible]);
     houseBox3[bBoxVisible].setFromCenterAndSize(houseCenters[bBoxVisible], houseSizes[bBoxVisible])
 }
