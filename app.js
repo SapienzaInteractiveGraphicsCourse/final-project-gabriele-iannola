@@ -357,8 +357,8 @@ if (!gameVariables.DEBUG) {
     controls.mouseButtons = { LEFT: 0 }
     controls.maxDistance = cameraRadius;
     controls.minDistance = cameraRadius;
-    controls.minPolarAngle = THREE.MathUtils.degToRad(20);
-    controls.maxPolarAngle = THREE.MathUtils.degToRad(70);
+    controls.minPolarAngle = THREE.MathUtils.degToRad(55);
+    controls.maxPolarAngle = THREE.MathUtils.degToRad(65);
 
 }
 
