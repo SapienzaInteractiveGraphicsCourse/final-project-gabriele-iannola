@@ -4,7 +4,6 @@ import { OrbitControls } from './libs/three/examples/jsm/controls/OrbitControls.
 import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLightHelper.js';
 import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
-import * as Utils from './libs/utils.js'
 
 var gameVariables = {
     DEBUG: false,
@@ -185,7 +184,6 @@ var houseSizes = [null, null, null, null, null, null, null,
 
 var inc = 0, shift = 0, directionIndex = 0;
 var directionsAxes = [new THREE.Vector2(0, 0), new THREE.Vector2(0, 0)];
-//cameraDirection, cameraTangent;
 
 var group1Props = {
     scalingValue: 0.05
@@ -281,6 +279,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 var postFolder = gui.addFolder("Fog")
+postFolder.open()
 postFolder.add(scene.fog,"density",0,0.005,0.0001)
 
 const clock = new THREE.Clock(false);
@@ -426,6 +425,7 @@ audioLoader.load( 'sounds/ambient.mp3', function( buffer ) {
 audioLoader.load( 'sounds/step.mp3', function( buffer ) {
 	soundStep.setBuffer( buffer );
 	soundStep.setLoop( true );
+    soundStep.setPlaybackRate(1.5);
 	soundStep.setVolume( audioProps.SFXVolume );	
 });
 audioLoader.load( 'sounds/pick.mp3', function( buffer ) {
@@ -512,7 +512,7 @@ gltfLoader.load(url4, (gltf4) => {
     });
 
 
-    //console.log(">>ROOT4--",Utils.dumpObject(cardBox).join('\n'));
+    
 
 
     cardBox.scale.set(cardboxProps.size, cardboxProps.size, cardboxProps.size);
@@ -540,7 +540,10 @@ gltfLoader.load(url, (gltf) => {
     root.traverse(function (node) {
 
         if (node.type === 'Mesh') {
-            
+            node.material = new THREE.MeshPhongMaterial({
+                map: node.material.map,
+                shininess: 50,
+            })
             node.castShadow = true;
             node.receiveShadow = true;
         }
@@ -549,12 +552,42 @@ gltfLoader.load(url, (gltf) => {
 
     mainNode = root.getObjectByName("Scene");
 
+    var dummy = {
+        "shininess": 10
+    }
 
-    //console.log(Utils.dumpObject(mainNode.getObjectByName("Scene")).join('\n'))
+    mainNode.traverse(function (node) {
+
+        if (node.type === 'Mesh') {
+            node.material = new THREE.MeshPhongMaterial({
+                map: node.material.map,
+                shininess: dummy.shininess,
+            })
+            node.castShadow = true;
+            node.receiveShadow = true;
+        }
+
+    });
+
+    
+
+    lightFolder.add(dummy,"shininess",1,100,1).onChange(() => {
+        mainNode.traverse(function (node) {
+
+            if (node.type === 'Mesh') {
+                node.material = new THREE.MeshPhongMaterial({
+                    map: node.material.map,
+                    shininess: dummy.shininess,
+                })
+            }
+    
+        });
+    })
+
+    
 
     computeCameraDirection();
     group1.add(camera);
-    //group1.add(mainNode);
 
     dogGroup.add(mainNode);
     group1.add(dogGroup);
@@ -671,19 +704,16 @@ gltfLoader.load(url, (gltf) => {
 
                     if (dogProps.holdingBox) {
                         scene.add(cardBox);
-                        console.log(group1.position);
 
                         cardBox.scale.set(cardboxProps.size, cardboxProps.size, cardboxProps.size);
                         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2, group1.position.z);
                         cardBox3 = new THREE.Box3().setFromObject(cardBox);
                         dogProps.holdingBox = false;
-                        console.log("release")
                         soundDrop.play();
 
                         if (cardBox3.intersectsBox(anchorBox3)) {
                             
                             soundPoint.play();
-                            console.log("POINT")
                             deliveredPackages += 1;
                             document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
                             spawnBoxRandom();
@@ -698,7 +728,6 @@ gltfLoader.load(url, (gltf) => {
                         cardBox.scale.set(1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size, 1 / group1Props.scalingValue * cardboxProps.size)
                         dogProps.holdingBox = true;
                         soundPick.play();
-                        console.log("pick")
                     }
 
                     break;
@@ -711,7 +740,6 @@ gltfLoader.load(url, (gltf) => {
                 }
 
                 default: {
-                    console.log(e);
                     break;
                 }
 
@@ -760,7 +788,7 @@ gltfLoader.load(url2, (gltf2) => {
     });
 
 
-    console.log(Utils.dumpObject(root2).join('\n'));
+    
     mainNode2 = root2.getObjectByName("RootNode");
 
     mainNode2.scale.set(0.008, 0.008, 0.008);
@@ -803,12 +831,10 @@ gltfLoader.load(url2, (gltf2) => {
         }
 
 
-        //obj.scale.set(1,1,1)
-        //console.log("--->",houseBox3[ndx].min,houseBox3[ndx].max);
+        
         if (gameVariables.DEBUG) {
-            //houseBoxHelpers[ndx] = new THREE.BoxHelper(obj);
+            
             houseBoxHelpers[l + ndx] = new THREE.Box3Helper(houseBox3[l + ndx], "#00ff00");
-            //houseBoxHelpers[l+ndx].visible = false;
             scene.add(houseBoxHelpers[l + ndx]);
         }
     });
@@ -817,8 +843,7 @@ gltfLoader.load(url2, (gltf2) => {
 
     scene.add(mainNode2);
 
-    //test();
-
+    startButton.style.display = "block";
 })
 
 const url3 = './models/arrow/scene.gltf'
@@ -826,7 +851,7 @@ var root3, mainNode3
 gltfLoader.load(url3, (gltf3) => {
     root3 = gltf3.scene;
 
-    //console.log(Utils.dumpObject(root3).join('\n'));
+    
     mainNode3 = root3.getObjectByName("RootNode");
 
 
@@ -843,27 +868,24 @@ var previousDogPosition = [];
 
 
 animate();
-//clock.start();
 
 var gameOver;
 var stop = false;
 
 function animate() {
+    
     if (stop) return;
     requestAnimationFrame(animate);
 
-    //test();
     controls.update();
 
-    //console.log(">>",clock.getElapsedTime())
 
     gameOver = timeHandler()
 
     if (gameOver != undefined) {
-        console.log("STOP!")
         
         if (!gameOver) {
-            //alert("You win!")
+            
             dogProps.inMovement = false;
             dogAnimationHandler();
             
@@ -875,9 +897,8 @@ function animate() {
             alert.style.display = "block";
             soundStep.stop(); 
             soundWin.play();
-            //resetGame()
         } else {
-            //alert("You lose!")
+            
             dogProps.inMovement = false;
             dogAnimationHandler();
             gameOverText.innerHTML = "YOU LOSE!";
@@ -888,12 +909,11 @@ function animate() {
             alert.style.display = "block";
             soundStep.stop(); 
             soundLose.play();
-            //resetGame()
         }
         stop = true
     }
 
-    //console.log(light.shadow.camera.near)
+    
 
     if (gameVariables.DEBUG) {
         lightHelper.update();
@@ -901,7 +921,6 @@ function animate() {
         cardBoxHelper.update();
         anchorBoxHelper.update();
         houseBoxHelpers.forEach(helper => {
-            //helper.update();
             helper.updateMatrixWorld();
         });
         envBoxHelper.updateMatrixWorld();
@@ -915,7 +934,7 @@ function animate() {
         group1.position.z += inc * dogProps.speed * directionsAxes[directionIndex].y
         dogGroup.rotation.y = shift * Math.PI + Math.atan2(directionsAxes[0].x, directionsAxes[0].y);
         dogBox3 = new THREE.Box3().setFromObject(group1);
-        //console.log(houseBox3);
+        
 
         if (!envBox3.containsBox(dogBox3)) {
             
@@ -937,7 +956,7 @@ function animate() {
     }
     if (dogProps.rendered) dogAnimationHandler();
 
-    //console.log("CAMERA POS", camera.position, "\nDOG POS", mainNode.position, "\nGROUP1 POS", group1.position, "\nLIGHT POS", light.position)
+    
 
 
 
@@ -994,7 +1013,7 @@ function dogAnimationHandler() {
 function spawnBoxRandom() {
     var rx, rz;
     do {
-        console.log("try");
+        
         rx = THREE.MathUtils.randFloat(-30, 30);
         rz = THREE.MathUtils.randFloat(-30, 30);
         cardBox.position.set(rx, 0, rz);
@@ -1006,24 +1025,23 @@ function spawnBoxRandom() {
     function checkIntersect() {
         for (var i = 0; i < houseBox3.length; i++) {
             if (cardBox3.intersectsBox(houseBox3[i])) {
-                console.log("fail");
+                
                 return true;
             }
         }
     }
 
-    console.log("box positioned at", rx, rz)
+    
 
     var distance = anchorProps.points.map((point) => cardBox.position.distanceTo(point));
     var probDistribution = distance.map((x => x / (distance.reduce(((total, curr) => total + curr), 0))))
 
     var sortedProb = probDistribution.map((x) => [probDistribution.indexOf(x), x]).sort((a, b) => a[1] - b[1]);
     var r = Math.random();
-    console.log("Probs", sortedProb);
-    console.log("R", r);
+    
     for (let i = 0; i < sortedProb.length; i++) {
         if (r <= sortedProb[i][1]) {
-            console.log(sortedProb[i])
+            
             if (sortedProb[i][0] == anchorProps.lastAnchorChoice) {
                 r -= sortedProb[i][1];
                 continue;
@@ -1045,14 +1063,14 @@ function timeHandler() {
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
 
     if (gameVariables.WIN_SCORE - deliveredPackages <= 0) {
-        console.log("GAME WIN!")
+        
         deliveredPackages = 0;
         clock.stop();
         return 0;
     }
 
     if (batteryValue <= 0) {
-        console.log("GAME OVER")
+        
         batteryValue = 100;
         clock.elapsedTime = 0;
         clock.stop();
@@ -1069,9 +1087,10 @@ function timeHandler() {
 }
 
 function startNewGame() {
+
     soundAmbient.play();
     soundClick.play();
-    console.log("startGame!")
+    
     deliveredPackages = 0;
     dogProps.locked = false;
     spawnBoxRandom();
@@ -1082,6 +1101,7 @@ function startNewGame() {
     document.getElementById("batteryDiv").style.display = "block";
     document.getElementById("crateDiv").style.display = "block";
     document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
+    
 }
 
 function resetGame() {
@@ -1102,17 +1122,11 @@ function resetGame() {
         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2 - 5, group1.position.z);
         cardBox3 = new THREE.Box3().setFromObject(cardBox);
         dogProps.holdingBox = false;
-        console.log("release")
+        
     }
 
     stop = false;
     animate();
 
-}
-
-function test() {
-
-    console.log("TEST ON #", bBoxVisible, houseCenters[bBoxVisible], houseSizes[bBoxVisible]);
-    houseBox3[bBoxVisible].setFromCenterAndSize(houseCenters[bBoxVisible], houseSizes[bBoxVisible])
 }
 
