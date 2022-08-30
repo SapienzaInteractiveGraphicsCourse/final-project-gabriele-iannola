@@ -6,7 +6,7 @@ html, body {
 #container {
 position: relative;
 }
-#container canvas, #batteryDiv , #crateDiv, #crateHelpDiv, #gameStartButton, .alert{
+#container canvas, .ui{
 position: absolute;
 }
 
@@ -105,6 +105,7 @@ canvas {
 
 #gameStartButton{
    display:none;
+   cursor: pointer;
    position:fixed;
    width:200px;
    height:100px;
@@ -143,6 +144,7 @@ canvas {
 
 .retryButton{
    display:block;
+   cursor: pointer;
    position:fixed;
    width:50%;
    height:20%;
@@ -194,4 +196,69 @@ canvas {
    background-color:rgb(193, 76, 72);
    border-color: rgb(232, 80, 74);
    color: #5f3633;
+}
+
+#difficultyDiv{
+   display:none;
+   position:fixed;
+   
+   width:600px;
+   height:150px;
+   top: 75%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+   background-color:rgba(110, 86, 20, 0.572);
+   border-color: #6e3c0a;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 200%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
+}
+
+#diffText{
+   position:relative;
+   top: -10%;
+}
+
+.difficultyButton{
+   display: inline-block;
+   cursor: pointer;
+   position:relative;
+   width:30%;
+   height:40%;
+   top: -20%;
+   left: 0%;
+   /*transform: translate(-100%, -50%);*/
+   background-color:rgb(154, 154, 154);
+   border-color: #6e3c0a;
+   text-align: center;
+   font-family: sans-serif;
+   font-size: 100%;
+   font-weight: bold;
+   text-shadow: 0 0 10px #FFFFFF;
+   color: #4b240e;
+}
+
+.easy{
+   background-color:rgb(85, 213, 134);
+}
+
+#easy:hover{
+   background-color:rgb(46, 241, 120);
+}
+
+.medium{
+   background-color:rgb(180, 170, 59);
+}
+#medium:hover{
+   background-color:rgb(241, 225, 47);
+}
+
+.hard{
+   background-color:rgb(197, 45, 18);
+}
+#hard:hover{
+   background-color:rgb(245, 46, 11);
 }

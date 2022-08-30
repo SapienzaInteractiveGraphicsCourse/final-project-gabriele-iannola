@@ -5,10 +5,15 @@ import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLigh
 import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 
+
 var gameVariables = {
     DEBUG: false,
-    PLAY_TIME: 180,
-    WIN_SCORE: 1,
+    CHOSEN_DIFFICULTY: 0,
+    DIFFICULTIES:[
+        [150,5],
+        [120,8],
+        [90,10],
+    ]
 }
 
 var deliveredPackages = 0;
@@ -247,6 +252,29 @@ alert.appendChild(retryButton);
 var crateHelpDiv = document.getElementById("crateHelpDiv");
 var crateHelpText = document.getElementsByClassName("crateHelpText")[0];
 
+var difficultyButtons = [];
+var buttonValues = ["EASY","MEDIUM","HARD"];
+var buttonIds = buttonValues.map(x => x.toLowerCase())
+
+for(let i=0;i<3;i++){
+    difficultyButtons.push(document.createElement("BUTTON"));
+    difficultyButtons[i].innerHTML = buttonValues[i];
+    difficultyButtons[i].classList.add("difficultyButton")
+    difficultyButtons[i].id = buttonIds[i];
+    difficultyButtons[i].onclick = selectButton
+    document.getElementById("difficultyDiv").appendChild(difficultyButtons[i])
+}
+
+difficultyButtons[0].classList.add("easy");
+
+function selectButton(e){
+    for(let i=0;i<3;i++){
+        difficultyButtons[i].classList.remove(buttonIds[i])
+    }
+    e.target.classList.add(e.target.id)
+    gameVariables.CHOSEN_DIFFICULTY = buttonIds.indexOf(e.target.id)
+}
+
 //creating a scene, camera and renderer
 
 const scene = new THREE.Scene();
@@ -262,7 +290,7 @@ const texture = loader.load(
         
     });
 
-scene.fog = new THREE.FogExp2(0xffe2c6,0);
+scene.fog = new THREE.FogExp2(0xffe2c6,0.002);
 const aspect = window.innerWidth / window.innerHeight;
 
 const canvas = document.querySelector('#c');
@@ -454,7 +482,7 @@ audioLoader.load( 'sounds/win.mp3', function( buffer ) {
 });
 audioLoader.load( 'sounds/lose.wav', function( buffer ) {
 	soundLose.setBuffer( buffer );
-	soundLose.setVolume( audioProps.SFXVolume );	
+	soundLose.setVolume( audioProps.SFXVolume + 0.2);	
 });
 
 var soundFolder = gui.addFolder("Audio")
@@ -715,7 +743,7 @@ gltfLoader.load(url, (gltf) => {
                             
                             soundPoint.play();
                             deliveredPackages += 1;
-                            document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
+                            document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1].toString();
                             spawnBoxRandom();
                         }
 
@@ -844,6 +872,8 @@ gltfLoader.load(url2, (gltf2) => {
     scene.add(mainNode2);
 
     startButton.style.display = "block";
+    document.getElementById("difficultyDiv").style.display = "block";
+    
 })
 
 const url3 = './models/arrow/scene.gltf'
@@ -1058,11 +1088,11 @@ function spawnBoxRandom() {
 }
 
 function timeHandler() {
-    batteryValue = Math.ceil((gameVariables.PLAY_TIME - clock.getElapsedTime()) / gameVariables.PLAY_TIME * 100);
+    batteryValue = Math.ceil((gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][0] - clock.getElapsedTime()) / gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][0] * 100);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
 
-    if (gameVariables.WIN_SCORE - deliveredPackages <= 0) {
+    if (gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1] - deliveredPackages <= 0) {
         
         deliveredPackages = 0;
         clock.stop();
@@ -1098,9 +1128,10 @@ function startNewGame() {
     clock.stop();
     clock.start();
     startButton.style.display = "none";
+    document.getElementById("difficultyDiv").style.display = "none";
     document.getElementById("batteryDiv").style.display = "block";
     document.getElementById("crateDiv").style.display = "block";
-    document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.WIN_SCORE.toString();
+    document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1].toString();
     
 }
 
@@ -1110,6 +1141,7 @@ function resetGame() {
     document.getElementById("batteryDiv").style.display = "none";
     document.getElementById("crateDiv").style.display = "none";
     startButton.style.display = "block";
+    document.getElementById("difficultyDiv").style.display = "block";
     alert.style.display = "none";
     group1.position.x = 0; group1.position.z = 0;
     dogGroup.rotation.y = 0;

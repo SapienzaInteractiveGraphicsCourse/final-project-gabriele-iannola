@@ -7,23 +7,27 @@
     <body>
         <div id="container">
             <canvas id="c"></canvas>
-            <div id="batteryDiv">
+            <div id="batteryDiv" class="ui">
                 <img id="batteryImage" src="./textures/battery-1.png" width="100%" height="100%">
                 <div id="batteryValue" class="b4"></div>
             </div>
 
-            <div id="crateDiv">
+            <div id="crateDiv" class="ui">
                 <img id="crateImage" src="./textures/crate.png" width="100%" height="100%">
                 <div id="crateValue"></div>
             </div>
 
-            <div id="crateHelpDiv" style="display: none;">
+            <div id="crateHelpDiv" class="ui" style="display: none;">
                 <img id="keyFImage" src="./textures/keyboard-key-f.png" width="18%" height="100%">
                 <div class="crateHelpText" > Pick package </div>
             </div>
 
-            <div class="alert winAlert">
+            <div class="alert winAlert ui">
                 <p></p>
+            </div>
+
+            <div id="difficultyDiv" class="ui">
+                <p id="diffText"> SELECT DIFFICULTY </p>
             </div>
             
         </div>
