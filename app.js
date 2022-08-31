@@ -1132,6 +1132,7 @@ function startNewGame() {
     clock.start();
     startButton.style.display = "none";
     document.getElementById("difficultyDiv").style.display = "none";
+    document.getElementById("titleDiv").style.display = "none";
     document.getElementById("batteryDiv").style.display = "block";
     document.getElementById("crateDiv").style.display = "block";
     document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1].toString();
@@ -1145,6 +1146,7 @@ function resetGame() {
     document.getElementById("crateDiv").style.display = "none";
     startButton.style.display = "block";
     document.getElementById("difficultyDiv").style.display = "block";
+    document.getElementById("titleDiv").style.display = "block";
     alert.style.display = "none";
     group1.position.x = 0; group1.position.z = 0;
     dogGroup.rotation.y = 0;
