@@ -308,7 +308,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 var postFolder = gui.addFolder("Fog")
 postFolder.open()
-postFolder.add(scene.fog,"density",0,0.005,0.0001)
+postFolder.add(scene.fog,"density",0,0.01,0.0001)
 
 const clock = new THREE.Clock(false);
 
@@ -386,8 +386,8 @@ light.shadow.camera.top = lightShadowCastRange;
 light.shadow.camera.bottom = -lightShadowCastRange;
 light.shadow.camera.left = -lightShadowCastRange;
 light.shadow.camera.right = lightShadowCastRange;
-light.shadow.camera.near = 0.1; // default
-light.shadow.camera.far = 500; // default
+light.shadow.camera.near = 100; // default
+light.shadow.camera.far = 300; // default
 light.shadow.bias = -0.0005
 
 scene.add(light);
@@ -396,20 +396,28 @@ scene.add(light);
 var ambientFolder = gui.addFolder("Ambient Light")
 ambientFolder.open();
 
-ambientFolder.add(ambient, "intensity", 0, 1, 0.1);
-
+ambientFolder.add(ambient, "intensity", 0, 1, 0.01);
+ambientFolder.addColor(lightProps, "ambientColor").onChange(function(colorValue){
+    ambient.color = new THREE.Color().set(colorValue)
+});
 
 var lightFolder = gui.addFolder("Lights")
 lightFolder.open();
-
+console.log(light.color)
 lightFolder.add(light, "intensity", 0, 5, 0.5);
+lightFolder.addColor(lightProps, "lightColor").onChange(function(colorValue){
+    //lightProps.lightColor = colorValue.toString(16)
+    light.color = new THREE.Color().set(colorValue)
+});
+
+
 lightFolder.add(light.position, "x", -100, 100, 1);
 lightFolder.add(light.position, "z", -100, 100, 1);
 
 lightFolder.add(light, "castShadow")
-lightFolder.add(light.shadow.camera, "near", 0.1, 0.5, 0.1);
-lightFolder.add(light.shadow.camera, "far", 0, 500, 1);
-lightFolder.add(light.shadow, "bias", -0.002, 0, 0.0001);
+lightFolder.add(light.shadow.camera, "near", 100, 200, 0.1);
+lightFolder.add(light.shadow.camera, "far", 100, 300, 1);
+lightFolder.add(light.shadow, "bias", -0.01, 0, 0.0001);
 
 var lightHelper = null;
 var lightShadowHelper = null;
@@ -739,7 +747,7 @@ gltfLoader.load(url, (gltf) => {
                         dogProps.holdingBox = false;
                         soundDrop.play();
 
-                        if (cardBox3.intersectsBox(anchorBox3)) {
+                        if (dogBox3.intersectsBox(anchorBox3)) {
                             
                             soundPoint.play();
                             deliveredPackages += 1;
