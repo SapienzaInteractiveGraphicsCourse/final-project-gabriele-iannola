@@ -822,7 +822,10 @@ gltfLoader.load(url2, (gltf2) => {
     mainNode2.scale.set(0.008, 0.008, 0.008);
     gltf2.scene.updateMatrixWorld(true)
     mainNode2.children[0].scale.set(3, 3, 3);
-
+    //console.log(mainNode2.children[0].children[0].material)
+    mainNode2.children[0].children[0].material.map.repeat = {x:10,y:10};
+    //mainNode2.children[0].children[0].material.map.repeat = {x:2,y:2};
+    //console.log(mainNode2.children[0].children[0].material)
     mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj, ndx) => {
 
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
