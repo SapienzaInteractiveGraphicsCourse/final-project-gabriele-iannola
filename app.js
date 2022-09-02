@@ -338,7 +338,7 @@ var cameraRadius = 60;
 
 
 camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
-camera.position.set(0, 30, -cameraRadius);
+camera.position.set(0, 30, cameraRadius);
 
 window.addEventListener('resize', resizeCanvas);
 
