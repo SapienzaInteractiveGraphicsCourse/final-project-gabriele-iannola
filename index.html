@@ -3,6 +3,18 @@
     <head>
         <link rel="stylesheet" href="style.css">
         <script src="./libs/dat.gui/build/dat.gui.js"></script>
+        <script type="text/javascript">
+            function showHelper(e){
+                document.getElementById("helper").style.display = "block"
+                document.getElementById("gameStartButton").style.display = "none"
+                document.getElementById("controlButton").style.display = "none"
+            }
+            function hideHelper(e){
+                document.getElementById("helper").style.display = "none"
+                document.getElementById("gameStartButton").style.display = "block"
+                document.getElementById("controlButton").style.display = "block"
+            }
+        </script>
     </head>
     <body>
         <div id="container">
@@ -26,7 +38,7 @@
                 <div class="crateHelpText" > Pick package </div>
             </div>
 
-            <div class="alert winAlert ui">
+            <div id="al" class="alert winAlert ui">
                 <p></p>
             </div>
 
@@ -34,7 +46,9 @@
                 <p id="diffText"> SELECT DIFFICULTY </p>
             </div>
 
-            
+            <img id="helper" src="./textures/dsBuffer.bmp.png" class="ui" onclick=hideHelper()>
+            <input id="controlButton" type="button" class="ui button" value="CONTROLS" onclick=showHelper()>
+
             
         </div>
         

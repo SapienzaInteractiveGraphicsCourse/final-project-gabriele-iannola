@@ -103,15 +103,15 @@ canvas {
 }
 
 
-#gameStartButton{
-   display:none;
+.button{
+   display:block;
    cursor: pointer;
    position:fixed;
    width:200px;
    height:100px;
    top: 50%;
    left: 50%;
-   transform: translate(-50%, -50%);
+   
 
    background-color:rgb(166, 123, 4);
    border-color: #6e3c0a;
@@ -121,6 +121,14 @@ canvas {
    font-weight: bold;
    text-shadow: 0 0 10px #FFFFFF;
    color: #4b240e;
+}
+
+#gameStartButton{
+   transform: translate(-130%, -50%);
+}
+
+#controlButton{
+   transform: translate(30%, -50%);
 }
 
 .alert{
@@ -291,4 +299,12 @@ canvas {
    border-color: rgb(85, 85, 85);
    background-color: rgb(91, 91, 91);*/
    /*text-shadow: 0 0 30px #000000;*/
+}
+
+#helper{
+   display:none;
+   position:fixed;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
 }

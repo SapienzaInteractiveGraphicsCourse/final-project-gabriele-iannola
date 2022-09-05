@@ -235,6 +235,7 @@ var batteryStates = [
 
 var startButton = document.createElement("INPUT");
 startButton.setAttribute("type", "button");
+startButton.classList.add("button");
 startButton.value = "START";
 startButton.id = "gameStartButton";
 startButton.onclick = startNewGame;
@@ -713,7 +714,6 @@ gltfLoader.load(url, (gltf) => {
                     break;
                 }
                 case "s": {
-
                     directionIndex = 0;
                     inc = -1
                     shift = 1
@@ -766,12 +766,6 @@ gltfLoader.load(url, (gltf) => {
                         soundPick.play();
                     }
 
-                    break;
-                }
-
-                case "g": {
-
-                    soundStep.play();
                     break;
                 }
 
@@ -1139,6 +1133,7 @@ function startNewGame() {
     clock.stop();
     clock.start();
     startButton.style.display = "none";
+    document.getElementById("controlButton").style.display = "none";
     document.getElementById("difficultyDiv").style.display = "none";
     document.getElementById("titleDiv").style.display = "none";
     document.getElementById("batteryDiv").style.display = "block";
@@ -1153,6 +1148,7 @@ function resetGame() {
     document.getElementById("batteryDiv").style.display = "none";
     document.getElementById("crateDiv").style.display = "none";
     startButton.style.display = "block";
+    document.getElementById("controlButton").style.display = "block";
     document.getElementById("difficultyDiv").style.display = "block";
     document.getElementById("titleDiv").style.display = "block";
     alert.style.display = "none";
