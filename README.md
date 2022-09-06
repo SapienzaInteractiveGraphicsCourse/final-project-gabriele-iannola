@@ -8,7 +8,7 @@ WIP
 
 ## How to play
 
-![App Screenshot](./textures/dsBuffer.bmp.png?raw=true "Game controls")
+![App Screenshot](./textures/help.png?raw=true "Game controls")
 
 ## Known issues
 
