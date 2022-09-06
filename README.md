@@ -4,7 +4,7 @@ Project for the Interactive Graphics course, by Gabriele Iannola (1849732)
 
 ## Demo
 
-WIP
+https://sapienzainteractivegraphicscourse.github.io/final-project-gabriele-iannola/
 
 ## How to play
 
