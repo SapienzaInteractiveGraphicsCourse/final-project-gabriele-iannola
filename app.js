@@ -10,8 +10,8 @@ var gameVariables = {
     DEBUG: false, //enable to see hitboxes 
     CHOSEN_DIFFICULTY: 0,
     DIFFICULTIES: [
-        [150, 5],
-        [120, 8],
+        [150, 3],
+        [120, 6],
         [90, 10],
     ]
 }
@@ -1144,6 +1144,7 @@ function startNewGame() {
     soundAmbient.play();
     soundClick.play();
 
+    batteryValue = 100;
     deliveredPackages = 0;
     dogProps.locked = false;
     spawnBoxRandom();
