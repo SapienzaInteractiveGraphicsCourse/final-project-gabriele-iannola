@@ -104,7 +104,7 @@ canvas {
 
 
 .button{
-   display:block;
+   display:none;
    cursor: pointer;
    position:fixed;
    width:200px;
@@ -280,7 +280,7 @@ canvas {
 
 #titleDiv{
    /*text-align: center;*/
-   
+   display:none;
    top: 50%;
    left: 50%;
    transform: translate(-50%, 0%);

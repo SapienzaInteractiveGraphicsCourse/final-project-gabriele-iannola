@@ -10,5 +10,9 @@ WIP
 
 ![App Screenshot](./textures/dsBuffer.bmp.png?raw=true "Game controls")
 
+## Known issues
+
+- Sometimes on the click of the button START, the soundtrack may not start. To avoid that, let the app load completely before starting the game.
+
 
 

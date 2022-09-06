@@ -1,20 +1,23 @@
 import * as THREE from './libs/three/build/three.module.js';
 import { GLTFLoader } from './libs/three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from './libs/three/examples/jsm/controls/OrbitControls.js';
-import { DirectionalLightHelper } from './libs/three/src/helpers/DirectionalLightHelper.js';
-import { AxesHelper } from './libs/three/src/helpers/AxesHelper.js';
 import { TWEEN } from './libs/three/examples/jsm/libs/tween.module.min.js'
 
 
+//game main variables
+
 var gameVariables = {
-    DEBUG: false,
+    DEBUG: false, //enable to see hitboxes 
     CHOSEN_DIFFICULTY: 0,
-    DIFFICULTIES:[
-        [150,5],
-        [120,8],
-        [90,10],
+    DIFFICULTIES: [
+        [150, 5],
+        [120, 8],
+        [90, 10],
     ]
 }
+
+var gameOver;
+var stop = false;
 
 var deliveredPackages = 0;
 var batteryValue = 100;
@@ -22,6 +25,9 @@ var batteryValue = 100;
 var gui = new dat.GUI();
 
 var bBoxVisible = 0;
+
+//animations data
+
 var dogJoints = {
     "leg4": 0, "move7": 0, "foot4": 0,
     "leg3": 0, "move": 0, "foot3": 0,
@@ -130,6 +136,7 @@ var idleAnimationProperties = {
     tweenSpeed: [500 / 2, 500 / 2, 500 / 2, 500 / 2]
 }
 
+//bounding boxes data
 
 var dogBoxHelper, dogBox3;
 var cardBox3, cardBoxHelper;
@@ -186,9 +193,12 @@ var houseSizes = [null, null, null, null, null, null, null,
     new THREE.Vector3(2.348953599145639, 5.170708013378246, 2.4755768405963643),
 ];
 
+//camera variables
 
 var inc = 0, shift = 0, directionIndex = 0;
 var directionsAxes = [new THREE.Vector2(0, 0), new THREE.Vector2(0, 0)];
+
+//dog properties
 
 var group1Props = {
     scalingValue: 0.05
@@ -202,6 +212,10 @@ var dogProps = {
     rendered: false,
     locked: true
 }
+
+var previousDogPosition = [];
+
+//box and anchors properties
 
 var cardboxProps = {
     size: 0.02,
@@ -224,6 +238,8 @@ var anchorProps = {
     ],
     lastAnchorChoice: -1,
 }
+
+// GUI elements
 
 var batteryStates = [
     ["./textures/battery-1.png", "b1"],
@@ -254,10 +270,10 @@ var crateHelpDiv = document.getElementById("crateHelpDiv");
 var crateHelpText = document.getElementsByClassName("crateHelpText")[0];
 
 var difficultyButtons = [];
-var buttonValues = ["EASY","MEDIUM","HARD"];
+var buttonValues = ["EASY", "MEDIUM", "HARD"];
 var buttonIds = buttonValues.map(x => x.toLowerCase())
 
-for(let i=0;i<3;i++){
+for (let i = 0; i < 3; i++) {
     difficultyButtons.push(document.createElement("BUTTON"));
     difficultyButtons[i].innerHTML = buttonValues[i];
     difficultyButtons[i].classList.add("difficultyButton")
@@ -268,18 +284,18 @@ for(let i=0;i<3;i++){
 
 difficultyButtons[0].classList.add("easy");
 
-function selectButton(e){
-    for(let i=0;i<3;i++){
+//select and deselect GUI difficulty button
+function selectButton(e) {
+    for (let i = 0; i < 3; i++) {
         difficultyButtons[i].classList.remove(buttonIds[i])
     }
     e.target.classList.add(e.target.id)
     gameVariables.CHOSEN_DIFFICULTY = buttonIds.indexOf(e.target.id)
 }
 
-//creating a scene, camera and renderer
+//creating scene and renderer
 
 const scene = new THREE.Scene();
-//scene.background = new THREE.Color(0x87ceeb)
 
 const loader = new THREE.TextureLoader();
 const texture = loader.load(
@@ -288,10 +304,16 @@ const texture = loader.load(
         const rt = new THREE.WebGLCubeRenderTarget(texture.image.height);
         rt.fromEquirectangularTexture(renderer, texture);
         scene.background = rt.texture;
-        
+
+        //adding fog
+        scene.fog = new THREE.FogExp2(0xffe2c6, 0.002);
+        var postFolder = gui.addFolder("Fog")
+        postFolder.open()
+        postFolder.add(scene.fog, "density", 0, 0.01, 0.0001)
     });
 
-scene.fog = new THREE.FogExp2(0xffe2c6,0.002);
+
+
 const aspect = window.innerWidth / window.innerHeight;
 
 const canvas = document.querySelector('#c');
@@ -299,7 +321,6 @@ const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({
     canvas,
     antialias: true,
-    //alpha:true
 });
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -307,17 +328,13 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-var postFolder = gui.addFolder("Fog")
-postFolder.open()
-postFolder.add(scene.fog,"density",0,0.01,0.0001)
-
 const clock = new THREE.Clock(false);
 
 var envBox3 = new THREE.Box3()
-envBox3.setFromCenterAndSize(new THREE.Vector3(0,0,0),new THREE.Vector3(100,3,100))
+envBox3.setFromCenterAndSize(new THREE.Vector3(0, 0, 0), new THREE.Vector3(100, 3, 100))
 var envBoxHelper = null;
-if(gameVariables.DEBUG){
-    envBoxHelper = new THREE.Box3Helper(envBox3,"#ffffff")
+if (gameVariables.DEBUG) {
+    envBoxHelper = new THREE.Box3Helper(envBox3, "#ffffff")
     scene.add(envBoxHelper);
 }
 
@@ -326,13 +343,15 @@ var group1 = new THREE.Group();
 var dogGroup = new THREE.Group();
 
 if (gameVariables.DEBUG) {
-    const axesHelperScene = new AxesHelper(5);
+    const axesHelperScene = new THREE.AxesHelper(5);
     scene.add(axesHelperScene);
-    const axesHelperTest = new AxesHelper(5);
+    const axesHelperTest = new THREE.AxesHelper(5);
     group1.add(axesHelperTest);
     const gridHelper = new THREE.GridHelper(100, 100);
     scene.add(gridHelper);
 }
+
+//camera 
 
 var camera;
 var cameraRadius = 60;
@@ -351,6 +370,7 @@ function resizeCanvas() {
 
 }
 
+//creating mouse controls
 
 const controls = new OrbitControls(camera, canvas);
 if (!gameVariables.DEBUG) {
@@ -363,11 +383,11 @@ if (!gameVariables.DEBUG) {
 
 }
 
-//create a light
+//lighting
 
 var lightProps = {
     "ambientColor": 0xffffff,
-    "ambientIntensity":0.1,
+    "ambientIntensity": 0.1,
     "lightColor": 0xffffff,
     "lightIntensity": 2,
     "distance": 100,
@@ -381,33 +401,32 @@ const light = new THREE.DirectionalLight(lightProps.lightColor, lightProps.light
 light.position.set(lightProps.distance, lightProps.distance, lightProps.distance);
 light.castShadow = true;
 
-//Set up shadow properties for the light
+//Set up shadows
 var lightShadowCastRange = 10;
 light.shadow.camera.top = lightShadowCastRange;
 light.shadow.camera.bottom = -lightShadowCastRange;
 light.shadow.camera.left = -lightShadowCastRange;
 light.shadow.camera.right = lightShadowCastRange;
-light.shadow.camera.near = 100; // default
-light.shadow.camera.far = 300; // default
+light.shadow.camera.near = 100;
+light.shadow.camera.far = 300;
 light.shadow.bias = -0.0005
 
 scene.add(light);
 
+//dat.GUI light controls
 
 var ambientFolder = gui.addFolder("Ambient Light")
 ambientFolder.open();
 
 ambientFolder.add(ambient, "intensity", 0, 1, 0.01);
-ambientFolder.addColor(lightProps, "ambientColor").onChange(function(colorValue){
+ambientFolder.addColor(lightProps, "ambientColor").onChange(function (colorValue) {
     ambient.color = new THREE.Color().set(colorValue)
 });
 
 var lightFolder = gui.addFolder("Lights")
 lightFolder.open();
-console.log(light.color)
 lightFolder.add(light, "intensity", 0, 5, 0.5);
-lightFolder.addColor(lightProps, "lightColor").onChange(function(colorValue){
-    //lightProps.lightColor = colorValue.toString(16)
+lightFolder.addColor(lightProps, "lightColor").onChange(function (colorValue) {
     light.color = new THREE.Color().set(colorValue)
 });
 
@@ -424,7 +443,7 @@ var lightHelper = null;
 var lightShadowHelper = null;
 
 if (gameVariables.DEBUG) {
-    lightHelper = new DirectionalLightHelper(light);
+    lightHelper = new THREE.DirectionalLightHelper(light);
     scene.add(lightHelper);
     lightShadowHelper = new THREE.CameraHelper(light.shadow.camera);
     scene.add(lightShadowHelper);
@@ -434,83 +453,84 @@ if (gameVariables.DEBUG) {
 // audio Management
 
 var audioProps = {
-    "ambientVolume":0.5,
-    "SFXVolume":0.5
+    "ambientVolume": 0.5,
+    "SFXVolume": 0.5
 }
 
 const listener = new THREE.AudioListener();
-camera.add( listener );
+camera.add(listener);
 
-const soundAmbient = new THREE.Audio( listener );
-const soundStep = new THREE.Audio( listener );
-const soundPick = new THREE.Audio( listener );
-const soundDrop = new THREE.Audio( listener );
-const soundClick = new THREE.Audio( listener );
-const soundPoint = new THREE.Audio( listener );
-const soundWin = new THREE.Audio( listener );
-const soundLose = new THREE.Audio( listener );
+const soundAmbient = new THREE.Audio(listener);
+const soundStep = new THREE.Audio(listener);
+const soundPick = new THREE.Audio(listener);
+const soundDrop = new THREE.Audio(listener);
+const soundClick = new THREE.Audio(listener);
+const soundPoint = new THREE.Audio(listener);
+const soundWin = new THREE.Audio(listener);
+const soundLose = new THREE.Audio(listener);
 
 const audioLoader = new THREE.AudioLoader();
 
 
-audioLoader.load( 'sounds/ambient.mp3', function( buffer ) {
-	soundAmbient.setBuffer( buffer );
-	soundAmbient.setLoop( true );
-	soundAmbient.setVolume( audioProps.ambientVolume );	
+audioLoader.load('sounds/ambient.mp3', function (buffer) {
+    soundAmbient.setBuffer(buffer);
+    soundAmbient.setLoop(true);
+    soundAmbient.setVolume(audioProps.ambientVolume);
 });
 
-audioLoader.load( 'sounds/step.mp3', function( buffer ) {
-	soundStep.setBuffer( buffer );
-	soundStep.setLoop( true );
+audioLoader.load('sounds/step.mp3', function (buffer) {
+    soundStep.setBuffer(buffer);
+    soundStep.setLoop(true);
     soundStep.setPlaybackRate(1.5);
-	soundStep.setVolume( audioProps.SFXVolume );	
+    soundStep.setVolume(audioProps.SFXVolume);
 });
-audioLoader.load( 'sounds/pick.mp3', function( buffer ) {
-	soundPick.setBuffer( buffer );
-	soundPick.setVolume( audioProps.SFXVolume );	
-});
-
-audioLoader.load( 'sounds/release.wav', function( buffer ) {
-	soundDrop.setBuffer( buffer );
-	soundDrop.setVolume( audioProps.SFXVolume );	
+audioLoader.load('sounds/pick.mp3', function (buffer) {
+    soundPick.setBuffer(buffer);
+    soundPick.setVolume(audioProps.SFXVolume);
 });
 
-audioLoader.load( 'sounds/click.wav', function( buffer ) {
-	soundClick.setBuffer( buffer );
-	soundClick.setVolume( audioProps.SFXVolume );	
+audioLoader.load('sounds/release.wav', function (buffer) {
+    soundDrop.setBuffer(buffer);
+    soundDrop.setVolume(audioProps.SFXVolume);
 });
 
-audioLoader.load( 'sounds/point.wav', function( buffer ) {
-	soundPoint.setBuffer( buffer );
-	soundPoint.setVolume( audioProps.SFXVolume );	
+audioLoader.load('sounds/click.wav', function (buffer) {
+    soundClick.setBuffer(buffer);
+    soundClick.setVolume(audioProps.SFXVolume);
 });
 
-audioLoader.load( 'sounds/win.mp3', function( buffer ) {
-	soundWin.setBuffer( buffer );
-	soundWin.setVolume( audioProps.SFXVolume );	
+audioLoader.load('sounds/point.wav', function (buffer) {
+    soundPoint.setBuffer(buffer);
+    soundPoint.setVolume(audioProps.SFXVolume);
 });
-audioLoader.load( 'sounds/lose.wav', function( buffer ) {
-	soundLose.setBuffer( buffer );
-	soundLose.setVolume( audioProps.SFXVolume + 0.2);	
+
+audioLoader.load('sounds/win.mp3', function (buffer) {
+    soundWin.setBuffer(buffer);
+    soundWin.setVolume(audioProps.SFXVolume);
+});
+audioLoader.load('sounds/lose.wav', function (buffer) {
+    soundLose.setBuffer(buffer);
+    soundLose.setVolume(audioProps.SFXVolume + 0.2);
 });
 
 var soundFolder = gui.addFolder("Audio")
 soundFolder.open();
-soundFolder.add(audioProps,"ambientVolume",0,1,0.1).onChange(()=>{
-    soundAmbient.setVolume( audioProps.ambientVolume );
+soundFolder.add(audioProps, "ambientVolume", 0, 1, 0.1).onChange(() => {
+    soundAmbient.setVolume(audioProps.ambientVolume);
 })
-soundFolder.add(audioProps,"SFXVolume",0,1,0.1).onChange(()=>{
-    soundStep.setVolume( audioProps.SFXVolume );
-    soundPick.setVolume( audioProps.SFXVolume );
-    soundDrop.setVolume( audioProps.SFXVolume );
-    soundClick.setVolume( audioProps.SFXVolume );
-    soundPoint.setVolume( audioProps.SFXVolume );
-    soundWin.setVolume( audioProps.SFXVolume );
-    soundLose.setVolume( audioProps.SFXVolume );
+soundFolder.add(audioProps, "SFXVolume", 0, 1, 0.1).onChange(() => {
+    soundStep.setVolume(audioProps.SFXVolume);
+    soundPick.setVolume(audioProps.SFXVolume);
+    soundDrop.setVolume(audioProps.SFXVolume);
+    soundClick.setVolume(audioProps.SFXVolume);
+    soundPoint.setVolume(audioProps.SFXVolume);
+    soundWin.setVolume(audioProps.SFXVolume);
+    soundLose.setVolume(audioProps.SFXVolume);
 })
 
 
 //#######################################################
+//##################IMPORT MODEL GLTF####################
 
 const gltfLoader = new GLTFLoader();
 
@@ -527,35 +547,30 @@ var anchorSolid;
 
     anchorBox3 = new THREE.Box3().setFromObject(anchorSolid);
     if (gameVariables.DEBUG) {
+
         anchorBoxHelper = new THREE.BoxHelper(anchorSolid);
         scene.add(anchorBoxHelper);
+
     }
 }
 
 //Creating a box
 var cardBox;
 
-
 const url4 = './models/crate/source/model.gltf'
 gltfLoader.load(url4, (gltf4) => {
     cardBox = gltf4.scene;
     cardBox.traverse(function (node) {
-
         if (node.type === 'Mesh') {
+
             node.castShadow = true;
             node.receiveShadow = true;
-        }
 
+        }
     });
 
-
-    
-
-
     cardBox.scale.set(cardboxProps.size, cardboxProps.size, cardboxProps.size);
-
     cardBox.position.y = -10;
-
 
     scene.add(cardBox);
 
@@ -569,7 +584,7 @@ gltfLoader.load(url4, (gltf4) => {
 })
 
 
-const url = 'models/test/dog2.gltf'
+const url = 'models/dog/dog2.gltf'
 var root, mainNode;
 gltfLoader.load(url, (gltf) => {
 
@@ -606,9 +621,9 @@ gltfLoader.load(url, (gltf) => {
 
     });
 
-    
 
-    lightFolder.add(dummy,"shininess",1,100,1).onChange(() => {
+
+    lightFolder.add(dummy, "shininess", 1, 100, 1).onChange(() => {
         mainNode.traverse(function (node) {
 
             if (node.type === 'Mesh') {
@@ -617,12 +632,10 @@ gltfLoader.load(url, (gltf) => {
                     shininess: dummy.shininess,
                 })
             }
-    
         });
     })
 
-    
-
+    //align the camera with the dog view
     computeCameraDirection();
     group1.add(camera);
 
@@ -639,12 +652,12 @@ gltfLoader.load(url, (gltf) => {
 
     light.target = mainNode;
 
+    //working on dog animation
+
     runTweenGroup = new TWEEN.Group();
     idleTweenGroup = new TWEEN.Group();
 
     createAnimationTweens(runTweenGroup, runningAnimationProperties);
-
-
     createAnimationTweens(idleTweenGroup, idleAnimationProperties);
 
     function createAnimationTweens(group, props) {
@@ -684,6 +697,8 @@ gltfLoader.load(url, (gltf) => {
         }
     }
 
+    //set dog controls
+
     setKeyboardControl();
 
     controls.addEventListener("change", computeCameraDirection);
@@ -700,7 +715,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 0
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    
+
                     break;
                 }
                 case "a": {
@@ -710,7 +725,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 1 / 2;
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    
+
                     break;
                 }
                 case "s": {
@@ -719,7 +734,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 1
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    
+
                     break;
                 }
                 case "d": {
@@ -729,7 +744,7 @@ gltfLoader.load(url, (gltf) => {
                     shift = 3 / 2
                     dogProps.inMovement = true;
                     controls.target = mainNode.position;
-                    
+
                     break;
                 }
 
@@ -748,7 +763,7 @@ gltfLoader.load(url, (gltf) => {
                         soundDrop.play();
 
                         if (dogBox3.intersectsBox(anchorBox3)) {
-                            
+
                             soundPoint.play();
                             deliveredPackages += 1;
                             document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1].toString();
@@ -782,7 +797,9 @@ gltfLoader.load(url, (gltf) => {
                     inc = 0;
                     break;
                 }
-                default:
+                default: {
+                    break;
+                }
             }
 
         }
@@ -803,6 +820,8 @@ gltfLoader.load(url, (gltf) => {
 
 });
 
+//importing the enviroment
+
 const url2 = './models/enviroment/scene.gltf'
 var root2, mainNode2
 gltfLoader.load(url2, (gltf2) => {
@@ -818,16 +837,15 @@ gltfLoader.load(url2, (gltf2) => {
     });
 
 
-    
+
     mainNode2 = root2.getObjectByName("RootNode");
 
     mainNode2.scale.set(0.008, 0.008, 0.008);
     gltf2.scene.updateMatrixWorld(true)
     mainNode2.children[0].scale.set(3, 3, 3);
-    //console.log(mainNode2.children[0].children[0].material)
-    mainNode2.children[0].children[0].material.map.repeat = {x:10,y:10};
-    //mainNode2.children[0].children[0].material.map.repeat = {x:2,y:2};
-    //console.log(mainNode2.children[0].children[0].material)
+    mainNode2.children[0].children[0].material.map.repeat = { x: 10, y: 10 };
+
+    //creating hitboxes for the buildings
     mainNode2.children.filter(x => /(house|Column|Stairs)/.test(x.name)).forEach((obj, ndx) => {
 
         houseBox3[ndx] = new THREE.Box3().setFromObject(obj);
@@ -864,9 +882,9 @@ gltfLoader.load(url2, (gltf2) => {
         }
 
 
-        
+
         if (gameVariables.DEBUG) {
-            
+
             houseBoxHelpers[l + ndx] = new THREE.Box3Helper(houseBox3[l + ndx], "#00ff00");
             scene.add(houseBoxHelpers[l + ndx]);
         }
@@ -877,16 +895,20 @@ gltfLoader.load(url2, (gltf2) => {
     scene.add(mainNode2);
 
     startButton.style.display = "block";
+    document.getElementById("controlButton").style.display = "block";
+    document.getElementById("titleDiv").style.display = "block";
     document.getElementById("difficultyDiv").style.display = "block";
-    
+
 })
+
+//importing arrow model
 
 const url3 = './models/arrow/scene.gltf'
 var root3, mainNode3
 gltfLoader.load(url3, (gltf3) => {
     root3 = gltf3.scene;
 
-    
+
     mainNode3 = root3.getObjectByName("RootNode");
 
 
@@ -898,17 +920,11 @@ gltfLoader.load(url3, (gltf3) => {
 })
 
 
-
-var previousDogPosition = [];
-
-
 animate();
 
-var gameOver;
-var stop = false;
 
 function animate() {
-    
+
     if (stop) return;
     requestAnimationFrame(animate);
 
@@ -918,22 +934,23 @@ function animate() {
     gameOver = timeHandler()
 
     if (gameOver != undefined) {
-        
+
         if (!gameOver) {
-            
+
             dogProps.inMovement = false;
             dogAnimationHandler();
-            
+
             gameOverText.innerHTML = "YOU WIN!";
             alert.classList.add("winAlert");
             alert.classList.remove("loseAlert");
             retryButton.classList.add("winButton");
             retryButton.classList.remove("loseButton");
             alert.style.display = "block";
-            soundStep.stop(); 
+
+            soundStep.stop();
             soundWin.play();
         } else {
-            
+
             dogProps.inMovement = false;
             dogAnimationHandler();
             gameOverText.innerHTML = "YOU LOSE!";
@@ -942,22 +959,25 @@ function animate() {
             retryButton.classList.add("loseButton");
             retryButton.classList.remove("winButton");
             alert.style.display = "block";
-            soundStep.stop(); 
+
+            soundStep.stop();
             soundLose.play();
         }
         stop = true
     }
 
-    
+
 
     if (gameVariables.DEBUG) {
         lightHelper.update();
         lightShadowHelper.update();
         cardBoxHelper.update();
         anchorBoxHelper.update();
+
         houseBoxHelpers.forEach(helper => {
             helper.updateMatrixWorld();
         });
+
         envBoxHelper.updateMatrixWorld();
 
     }
@@ -969,14 +989,14 @@ function animate() {
         group1.position.z += inc * dogProps.speed * directionsAxes[directionIndex].y
         dogGroup.rotation.y = shift * Math.PI + Math.atan2(directionsAxes[0].x, directionsAxes[0].y);
         dogBox3 = new THREE.Box3().setFromObject(group1);
-        
+
 
         if (!envBox3.containsBox(dogBox3)) {
-            
+
             group1.position.x = previousDogPosition[0];
             group1.position.z = previousDogPosition[1];
             dogGroup.rotation.y = previousDogPosition[2];
-        } 
+        }
 
         for (var i = 0; i < houseBox3.length; i++) {
             if (dogBox3.intersectsBox(houseBox3[i])) {
@@ -988,12 +1008,9 @@ function animate() {
         }
 
         if (gameVariables.DEBUG) dogBoxHelper.update();
+
     }
     if (dogProps.rendered) dogAnimationHandler();
-
-    
-
-
 
     light.shadow.camera.updateProjectionMatrix();
     light.shadow.camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
@@ -1001,54 +1018,54 @@ function animate() {
     camera.lookAt(group1.position.x, group1.position.y, group1.position.z);
 
     if (dogProps.locked) group1.remove(mainNode3);
-    dogProps.holdingBox ?
+    if(mainNode3){
+        dogProps.holdingBox ?
         mainNode3.lookAt(anchorSolid.position.x, anchorSolid.position.y, anchorSolid.position.z) :
         mainNode3.lookAt(cardBox.position.x, cardBox.position.y, cardBox.position.z)
-
+    }
     
 
-    if(dogProps.holdingBox){
-        if (dogProps.holdingBox && dogBox3.intersectsBox(anchorBox3)){
+    if (dogProps.holdingBox) {
+        if (dogProps.holdingBox && dogBox3.intersectsBox(anchorBox3)) {
 
             crateHelpDiv.style.display = "block";
             crateHelpText.innerHTML = "Drop package";
-            
-        }else{
-            
-            crateHelpDiv.style.display = "none";     
-        }
-    }else {
-        if (group1.position.distanceTo(cardBox.position) <= cardboxProps.pickupDistance){
 
-            
+        } else {
+            crateHelpDiv.style.display = "none";
+        }
+    } else {
+        if (cardBox && group1.position.distanceTo(cardBox.position) <= cardboxProps.pickupDistance) {
+
             crateHelpDiv.style.display = "block";
             crateHelpText.innerHTML = "Pick package";
-            
-        }else{
-            
-            crateHelpDiv.style.display = "none";     
+
+        } else {
+            crateHelpDiv.style.display = "none";
         }
     }
-    
+
     renderer.render(scene, camera);
 }
 
+//toggle dog animation
 function dogAnimationHandler() {
 
-    if (dogProps.inMovement){
-        if(!soundStep.isPlaying) soundStep.play(); 
+    if (dogProps.inMovement) {
+        if (!soundStep.isPlaying) soundStep.play();
         runTweenGroup.update();
-    } 
-    else{
-        if(soundStep.isPlaying) soundStep.stop(); 
+    }
+    else {
+        if (soundStep.isPlaying) soundStep.stop();
         idleTweenGroup.update();
-    } 
+    }
 }
 
+//spawn a box in a "random" location on the map
 function spawnBoxRandom() {
     var rx, rz;
     do {
-        
+
         rx = THREE.MathUtils.randFloat(-30, 30);
         rz = THREE.MathUtils.randFloat(-30, 30);
         cardBox.position.set(rx, 0, rz);
@@ -1060,23 +1077,23 @@ function spawnBoxRandom() {
     function checkIntersect() {
         for (var i = 0; i < houseBox3.length; i++) {
             if (cardBox3.intersectsBox(houseBox3[i])) {
-                
+
                 return true;
             }
         }
     }
 
-    
+
 
     var distance = anchorProps.points.map((point) => cardBox.position.distanceTo(point));
     var probDistribution = distance.map((x => x / (distance.reduce(((total, curr) => total + curr), 0))))
 
     var sortedProb = probDistribution.map((x) => [probDistribution.indexOf(x), x]).sort((a, b) => a[1] - b[1]);
     var r = Math.random();
-    
+
     for (let i = 0; i < sortedProb.length; i++) {
         if (r <= sortedProb[i][1]) {
-            
+
             if (sortedProb[i][0] == anchorProps.lastAnchorChoice) {
                 r -= sortedProb[i][1];
                 continue;
@@ -1092,20 +1109,21 @@ function spawnBoxRandom() {
 
 }
 
+//change battery GUI and handle win/lose outcome
 function timeHandler() {
     batteryValue = Math.ceil((gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][0] - clock.getElapsedTime()) / gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][0] * 100);
     var batteryValueObj = document.getElementById("batteryValue");
     batteryValueObj.innerHTML = batteryValue.toString() + "%";
 
     if (gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1] - deliveredPackages <= 0) {
-        
+
         deliveredPackages = 0;
         clock.stop();
         return 0;
     }
 
     if (batteryValue <= 0) {
-        
+
         batteryValue = 100;
         clock.elapsedTime = 0;
         clock.stop();
@@ -1125,7 +1143,7 @@ function startNewGame() {
 
     soundAmbient.play();
     soundClick.play();
-    
+
     deliveredPackages = 0;
     dogProps.locked = false;
     spawnBoxRandom();
@@ -1139,7 +1157,7 @@ function startNewGame() {
     document.getElementById("batteryDiv").style.display = "block";
     document.getElementById("crateDiv").style.display = "block";
     document.getElementById("crateValue").innerHTML = deliveredPackages.toString() + "/" + gameVariables.DIFFICULTIES[gameVariables.CHOSEN_DIFFICULTY][1].toString();
-    
+
 }
 
 function resetGame() {
@@ -1163,7 +1181,7 @@ function resetGame() {
         cardBox.position.set(group1.position.x, group1.position.y + cardboxProps.size / 2 - 5, group1.position.z);
         cardBox3 = new THREE.Box3().setFromObject(cardBox);
         dogProps.holdingBox = false;
-        
+
     }
 
     stop = false;
